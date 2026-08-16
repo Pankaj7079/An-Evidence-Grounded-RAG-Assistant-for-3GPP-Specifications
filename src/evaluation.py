@@ -1,4 +1,4 @@
-"""Ragas-Aligned Hybrid Automated Evaluation & Benchmarking Engine.
+"""Ragas-Aligned Hybrid Evaluation & Benchmarking Engine.
 
 Computes:
 1. Retrieval Layer (IR): Recall@K (Hit Rate), Mean Reciprocal Rank (MRR).
@@ -85,7 +85,7 @@ def re_tokenize(text: str) -> List[str]:
 
 
 class Evaluator:
-    """Automated benchmark runner and metrics aggregator."""
+    """benchmark runner and metrics aggregator."""
 
     def __init__(
         self,
@@ -167,12 +167,12 @@ class Evaluator:
         )
 
     def run_benchmark(self, max_queries: Optional[int] = None) -> Tuple[BenchmarkSummary, List[QueryEvaluationResult]]:
-        """Run complete automated benchmark suite and generate evaluation summary."""
+        """Run complete benchmark suite and generate evaluation summary."""
         questions = self.load_benchmark_dataset()
         if max_queries:
             questions = questions[:max_queries]
 
-        logger.info(f"Starting automated benchmark on {len(questions)} questions...")
+        logger.info(f"Starting  benchmark on {len(questions)} questions...")
         results: List[QueryEvaluationResult] = []
 
         for idx, q in enumerate(questions, 1):
@@ -233,7 +233,7 @@ class Evaluator:
 def print_benchmark_table(summary: BenchmarkSummary):
     """Print executive markdown metrics table to console."""
     print("\n" + "=" * 90)
-    print("3GPP SPEC ASSISTANT -- AUTOMATED BENCHMARK EVALUATION REPORT")
+    print("3GPP SPEC ASSISTANT -- BENCHMARK EVALUATION REPORT")
     print("=" * 90)
     print(f"Evaluated Test Cases: {summary.total_queries} ({summary.positive_queries} In-Domain + {summary.negative_queries} Negative/Abstention)")
     print(f"LLM Provider:         {summary.llm_provider.upper()}")

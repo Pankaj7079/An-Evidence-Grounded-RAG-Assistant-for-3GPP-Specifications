@@ -440,7 +440,7 @@ def main():
             st.markdown('<div class="sidebar-label">Example Queries</div>', unsafe_allow_html=True)
             examples = [
                 "What are the core functions of the AMF?",
-                "Explain the Registration procedure",
+                "Explain the Registration procedure of 5G",
                 "UPF and SMF interaction via N4",
                 "What is IPUPS in roaming?",
                 "PDU Session Establishment flow",
