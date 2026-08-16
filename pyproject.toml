@@ -1,7 +1,7 @@
 [project]
 name = "threegpp-spec-assistant"
 version = "0.1.0"
-description = "An Evidence-Grounded RAG Assistant for 3GPP Specifications (TS 23.501 & TS 23.502)"
+description = "An Evidence-Grounded RAG Assistant for 3GPP Specifications"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -29,3 +29,5 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+

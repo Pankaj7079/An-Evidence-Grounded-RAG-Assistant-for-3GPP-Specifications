@@ -172,3 +172,5 @@ uv run python -m src.evaluation
 
 - **3GPP TS 23.501 Rel-17 (v17.4.0):** System architecture for the 5G System (5GS) — 888 indexed clauses.
 - **3GPP TS 23.502 Rel-16 (v16.9.0):** Procedures for the 5G System (5GS) — 949 indexed clauses.
+
+
