@@ -213,7 +213,7 @@ def main():
                 "What is the capital of France?",  # Negative test for abstention
             ]
             for sq in sample_questions:
-                if st.button(sq, key=f"btn_{sq}", use_container_width=True):
+                if st.button(sq, key=f"btn_{sq}"):
                     st.session_state["query_input"] = sq
 
         with col_left:
@@ -227,9 +227,9 @@ def main():
 
             col_submit, col_clear = st.columns([1, 5])
             with col_submit:
-                submit_btn = st.button("🚀 Search & Answer", type="primary", use_container_width=True)
+                submit_btn = st.button("🚀 Search & Answer", type="primary")
             with col_clear:
-                if st.button("Clear", use_container_width=False):
+                if st.button("Clear"):
                     st.session_state["query_input"] = ""
                     st.rerun()
 
@@ -375,7 +375,7 @@ def main():
                     "Latency (ms)": f"{qr.get('latency_ms', 0):.0f} ms",
                 })
 
-            st.dataframe(table_rows, use_container_width=True)
+            st.dataframe(table_rows)
         else:
             st.info("No benchmark report found. Run `uv run python -m src.evaluation` to generate metrics.")
 
