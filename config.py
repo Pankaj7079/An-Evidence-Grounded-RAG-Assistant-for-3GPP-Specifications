@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     # Retrieval Hyperparameters
     TOP_K: int = 4
     RRF_K: int = 60
-    MIN_RELEVANCE_SCORE: float = 0.35
+    MIN_RELEVANCE_SCORE: float = 0.40
 
     # Abstention Text
     ABSTENTION_MESSAGE: str = (

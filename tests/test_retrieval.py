@@ -71,7 +71,7 @@ def test_retrieval_metadata_filtering(retriever):
 def test_evidence_gate_in_domain(retriever):
     decision = retriever.evaluate_evidence_gate("What are the functions of the AMF in 5G architecture?")
     assert decision.is_sufficient is True
-    assert decision.top_score >= 0.35
+    assert decision.top_score >= 0.40
     assert len(decision.retrieved_chunks) > 0
 
 
