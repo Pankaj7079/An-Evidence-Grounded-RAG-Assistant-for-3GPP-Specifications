@@ -5,6 +5,7 @@ for deterministic, hallucination-free generation grounded exclusively in 3GPP sp
 """
 
 import logging
+import re
 from typing import List, Optional
 
 from config import settings
@@ -20,12 +21,12 @@ You must answer questions strictly and exclusively using the provided 3GPP speci
 
 ANSWER STRUCTURE & CITATION RULES:
 1. Provide a clean, executive-level technical answer formatted with clear Markdown sections:
-   - `### Executive Summary`: A crisp 1-2 sentence direct response to the query.
-   - `### Functional Capabilities / Key Procedures`: Categorized bullet points grouped logically by functional domain.
+   - `### Executive Summary`: A crisp 1-2 sentence direct response to the query with primary citation.
+   - `### Key Functional Responsibilities / Procedure Steps`: Group capabilities into 3-5 comprehensive category bullets with bold titles (e.g., **Control Plane & NAS Termination:**, **Mobility & Registration Management:**, **Security & Access Control:**).
    - `### Applicable Reference Points & Interfaces`: Summary of relevant reference points (e.g. N1, N2, N4), if applicable.
-2. CITATION PLACEMENT RULE:
-   - Place exact inline citations naturally at the end of each major concept, category, or bullet point: `[TS 23.501 Clause X.Y, Page Z]` or `[TS 23.502 Clause X.Y, Page Z]`.
-   - DO NOT spam or repeat the exact same citation bracket on every single minor sub-bullet if they all derive from the same clause. Cite the source once per logical section or distinct claim.
+2. CITATION PLACEMENT & NON-REPETITION:
+   - Cite the supporting clause and page at the end of each category or major conceptual block: `[TS 23.501 Clause X.Y, Page Z]` or `[TS 23.502 Clause X.Y, Page Z]`.
+   - DO NOT repeat the exact same citation bracket on every single sentence or minor bullet. Group related points under one category and cite once per group.
    - For multi-page clauses, cite the range: `[TS 23.501 Clause 4.2.4, Page 42-43]`.
    - Only cite clauses and page numbers present in the context source headers.
 
@@ -35,6 +36,15 @@ NEGATIVE & SCOPE CONSTRAINTS:
 - DO NOT list unrelated 5G procedures when answering negative queries.
 - NEVER include robotic meta-commentary, apologies, or disclaimers such as "There is no mention of TS 23.502 in the provided context...", "Based on the provided excerpts...", or "According to the retrieved text...".
 """
+
+
+def clean_redundant_inline_citations(text: str) -> str:
+    """Clean up empty backticks and normalize citation formatting."""
+    text = re.sub(r"\s*``\s*", " ", text)
+    text = re.sub(r"\s*''\s*", " ", text)
+    # Remove any double spaces
+    text = re.sub(r"[ \t]+", " ", text)
+    return text.strip()
 
 
 class LLMClient:
@@ -80,29 +90,32 @@ class LLMClient:
         max_tokens: int = settings.MAX_OUTPUT_TOKENS,
     ) -> str:
         """Generate deterministic response from configured LLM provider."""
+        raw_res = ""
         if self.provider == "groq" and self._groq_client:
             try:
-                return self._generate_groq(prompt, system_instruction, temperature, max_tokens)
+                raw_res = self._generate_groq(prompt, system_instruction, temperature, max_tokens)
             except Exception as e:
                 logger.warning(f"Groq generation failed: {e}. Attempting fallback to Gemini...")
                 if self._gemini_client:
-                    return self._generate_gemini(prompt, system_instruction, temperature, max_tokens)
-                raise
+                    raw_res = self._generate_gemini(prompt, system_instruction, temperature, max_tokens)
+                else:
+                    raise
 
-        if self.provider == "gemini" and self._gemini_client:
+        elif self.provider == "gemini" and self._gemini_client:
             try:
-                return self._generate_gemini(prompt, system_instruction, temperature, max_tokens)
+                raw_res = self._generate_gemini(prompt, system_instruction, temperature, max_tokens)
             except Exception as e:
                 logger.warning(f"Gemini generation failed: {e}. Attempting fallback to Groq...")
                 if self._groq_client:
-                    return self._generate_groq(prompt, system_instruction, temperature, max_tokens)
-                raise
+                    raw_res = self._generate_groq(prompt, system_instruction, temperature, max_tokens)
+                else:
+                    raise
+        elif self._groq_client:
+            raw_res = self._generate_groq(prompt, system_instruction, temperature, max_tokens)
+        else:
+            raise RuntimeError("No LLM provider client is configured or available.")
 
-        # Default fallback to Groq if available
-        if self._groq_client:
-            return self._generate_groq(prompt, system_instruction, temperature, max_tokens)
-
-        raise RuntimeError("No LLM provider client is configured or available.")
+        return clean_redundant_inline_citations(raw_res)
 
     def _generate_groq(
         self, prompt: str, system_instruction: str, temperature: float, max_tokens: int

@@ -1,7 +1,8 @@
-"""3GPP Telecom Spec Chatbot - Enterprise Streamlit Web Interface.
+"""3GPP Telecom Spec Chatbot - Dark Mode Enterprise Streamlit Interface.
 
 Conversational, evidence-grounded AI Chatbot for official 3GPP 5G Specifications
 (TS 23.501 System Architecture & TS 23.502 Procedures).
+Engineered by Pankaj.
 """
 
 import json
@@ -23,26 +24,30 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom Humanistic Engineering Styling
+# Custom Humanistic Engineering Dark-Mode Styling
 st.markdown(
     """
     <style>
+    /* Dark Theme Global Fonts and Base */
     .main {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #0b0f19;
+        color: #f3f4f6;
     }
     
     /* Header Card */
     .telecom-header {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         color: #ffffff;
-        padding: 20px 28px;
+        padding: 22px 28px;
         border-radius: 10px;
         margin-bottom: 20px;
         border: 1px solid #334155;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
     }
     .telecom-header h1 {
-        color: #ffffff;
-        font-size: 22px;
+        color: #f8fafc;
+        font-size: 24px;
         font-weight: 700;
         margin: 0 0 6px 0;
         letter-spacing: -0.02em;
@@ -55,68 +60,80 @@ st.markdown(
     }
     .spec-badge {
         display: inline-block;
-        background: #1e293b;
+        background: #111827;
         color: #38bdf8;
-        padding: 3px 8px;
-        border-radius: 5px;
+        padding: 4px 10px;
+        border-radius: 6px;
         font-size: 12px;
         font-weight: 600;
-        margin-right: 6px;
+        margin-right: 8px;
         border: 1px solid #0284c7;
+    }
+    .author-badge {
+        display: inline-block;
+        background: #1e1b4b;
+        color: #a5b4fc;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid #4338ca;
     }
 
     /* Telemetry Badges */
     .telemetry-bar {
         display: flex;
         gap: 8px;
-        margin: 10px 0 14px 0;
+        margin: 12px 0 16px 0;
         flex-wrap: wrap;
         align-items: center;
     }
     .telemetry-chip {
-        background: #f8fafc;
-        color: #334155;
+        background: #111827;
+        color: #cbd5e1;
         padding: 4px 10px;
         border-radius: 6px;
         font-size: 12px;
         font-weight: 500;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #334155;
     }
     .telemetry-chip-green {
-        background: #f0fdf4;
-        color: #166534;
-        border: 1px solid #bbf7d0;
+        background: #064e3b;
+        color: #6ee7b7;
+        border: 1px solid #059669;
         padding: 4px 10px;
         border-radius: 6px;
         font-size: 12px;
         font-weight: 600;
     }
     .telemetry-chip-amber {
-        background: #fffbeb;
-        color: #92400e;
-        border: 1px solid #fde68a;
+        background: #451a03;
+        color: #fcd34d;
+        border: 1px solid #d97706;
         padding: 4px 10px;
         border-radius: 6px;
         font-size: 12px;
         font-weight: 600;
     }
+
+    /* Validated Citation Pills */
     .citation-pill {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #bfdbfe;
+        background: #082f49;
+        color: #38bdf8;
+        border: 1px solid #0284c7;
         padding: 3px 8px;
         border-radius: 5px;
         font-size: 12px;
         font-weight: 600;
-        margin: 2px 4px 2px 0;
+        margin: 3px 6px 3px 0;
         display: inline-block;
     }
 
-    /* Chunk Excerpt Card */
+    /* Context Chunk Card */
     .chunk-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-left: 4px solid #2563eb;
+        background: #111827;
+        border: 1px solid #334155;
+        border-left: 4px solid #38bdf8;
         border-radius: 6px;
         padding: 14px;
         margin-bottom: 10px;
@@ -124,22 +141,22 @@ st.markdown(
     .chunk-title {
         font-weight: 600;
         font-size: 13.5px;
-        color: #0f172a;
-        margin-bottom: 3px;
+        color: #f8fafc;
+        margin-bottom: 4px;
     }
     .chunk-meta {
         font-size: 12px;
-        color: #64748b;
+        color: #94a3b8;
         margin-bottom: 6px;
     }
     .chunk-text {
         font-size: 13px;
-        color: #334155;
-        line-height: 1.55;
-        background: #f8fafc;
-        padding: 8px 12px;
+        color: #e2e8f0;
+        line-height: 1.6;
+        background: #0b0f19;
+        padding: 10px 12px;
         border-radius: 5px;
-        border: 1px solid #f1f5f9;
+        border: 1px solid #1e293b;
     }
     </style>
     """,
@@ -154,15 +171,16 @@ def get_pipeline() -> RAGPipeline:
 
 
 def render_header():
-    """Render top header and specification context badges."""
+    """Render top header with dark theme architecture branding."""
     st.markdown(
         """
         <div class="telecom-header">
             <h1>📡 3GPP Telecom Spec Assistant</h1>
-            <p>Evidence-grounded conversational assistant for 3GPP 5G Specifications with exact clause and page citations.</p>
-            <div style="margin-top: 10px;">
+            <p>Evidence-grounded conversational intelligence for 5G Core Specifications with sentence-level clause & page citations.</p>
+            <div style="margin-top: 12px;">
                 <span class="spec-badge">3GPP TS 23.501 Rel-17 (5G Architecture - 888 Clauses)</span>
                 <span class="spec-badge">3GPP TS 23.502 Rel-16 (5G Procedures - 949 Clauses)</span>
+                <span class="author-badge">Engineered by Pankaj</span>
             </div>
         </div>
         """,
@@ -188,16 +206,16 @@ def main():
             st.session_state["messages"] = [
                 {
                     "role": "assistant",
-                    "content": "Hello! I am your **3GPP Telecom Spec Assistant**. I answer architecture, procedure, and interface questions strictly grounded in **TS 23.501** and **TS 23.502** with verified clause citations. How can I assist your engineering work today?",
+                    "content": "Hello! I am your **3GPP Telecom Spec Assistant**. I provide evidence-grounded answers for **TS 23.501** (Architecture) and **TS 23.502** (Procedures) with verified clause citations and zero hallucinations. How can I assist your engineering work today?",
                     "response_obj": None,
                 }
             ]
 
         # Sidebar Controls
         with st.sidebar:
-            st.markdown("### ⚙️ Specification Controls")
+            st.markdown("### ⚙️ Knowledge Controls")
             spec_filter = st.selectbox(
-                "Filter Specification Knowledge:",
+                "Filter Knowledge Scope:",
                 ["All Specifications (TS 23.501 + TS 23.502)", "3GPP TS 23.501 (Architecture)", "3GPP TS 23.502 (Procedures)"],
                 index=0,
             )
@@ -223,7 +241,7 @@ def main():
                     st.rerun()
 
             st.markdown("---")
-            if st.button("🗑️ Clear Chat History", type="secondary"):
+            if st.button("🗑️ Clear Chat History"):
                 st.session_state["messages"] = [
                     {
                         "role": "assistant",
@@ -258,7 +276,7 @@ def main():
                         unsafe_allow_html=True,
                     )
 
-                    # Validated Citations
+                    # Deduplicated Validated Citations
                     if res_obj.citation_validation and res_obj.citation_validation.valid_citations:
                         st.markdown("**📌 Validated Specification Citations:**")
                         citations_html = "".join(
@@ -283,7 +301,7 @@ def main():
                                     unsafe_allow_html=True,
                                 )
 
-        # Check for user input from chat_input or queued chip
+        # User Input Handling
         queued_input = st.session_state.pop("queued_prompt", None)
         chat_prompt = st.chat_input("Ask a 3GPP question or procedure (e.g. AMF functions, Registration flow)...")
 
