@@ -22,13 +22,11 @@ class Settings(BaseSettings):
     EVALUATION_DIR: Path = DATA_DIR / "evaluation"
     STORAGE_DIR: Path = BASE_DIR / "storage"
     QDRANT_PATH: Path = STORAGE_DIR / "qdrant"
-    RELATIONSHIPS_DIR: Path = STORAGE_DIR / "relationships"
-    BM25_INDEX_PATH: Path = STORAGE_DIR / "bm25_index.pkl"
 
     # LLM Settings
-    LLM_PROVIDER: Literal["gemini", "groq"] = "gemini"
+    LLM_PROVIDER: Literal["groq", "gemini"] = "groq"
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-1.5-flash"  # or gemini-2.5-flash / gemini-1.5-pro
+    GEMINI_MODEL: str = "gemini-flash-latest"
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
     TEMPERATURE: float = 0.0
@@ -37,13 +35,19 @@ class Settings(BaseSettings):
     # Embedding & Vector Store
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
     VECTOR_BACKEND: Literal["qdrant", "chroma"] = "qdrant"
-    COLLECTION_NAME: str = "threegpp_specs"
+    COLLECTION_NAME: str = "3gpp_specs"
+    QDRANT_URL: str = ""
+    QDRANT_API_KEY: str = ""
+
+    # Re-ranker Settings
+    RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    CANDIDATE_K: int = 15
+    FINAL_CONTEXT_K: int = 4
 
     # Retrieval Hyperparameters
-    TOP_K: int = 8
-    FINAL_CONTEXT_K: int = 4
+    TOP_K: int = 4
     RRF_K: int = 60
-    MIN_RELEVANCE_SCORE: float = 0.25
+    MIN_RELEVANCE_SCORE: float = 0.35
 
     # Abstention Text
     ABSTENTION_MESSAGE: str = (
@@ -61,6 +65,5 @@ for directory in [
     settings.EVALUATION_DIR,
     settings.STORAGE_DIR,
     settings.QDRANT_PATH,
-    settings.RELATIONSHIPS_DIR,
 ]:
     directory.mkdir(parents=True, exist_ok=True)

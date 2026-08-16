@@ -1,0 +1,227 @@
+[
+  {
+    "id": "bench_001",
+    "question": "What are the primary functions of the Access and Mobility Management Function (AMF) in 5G system architecture?",
+    "category": "architecture",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "6.2.1",
+    "expected_page": "423-424",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_002",
+    "question": "What are the main functionalities of the Session Management Function (SMF)?",
+    "category": "architecture",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "6.2.2",
+    "expected_page": "425-426",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_003",
+    "question": "What functionalities are supported by the User Plane Function (UPF)?",
+    "category": "architecture",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "6.2.3",
+    "expected_page": "426-427",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_004",
+    "question": "What is the role and functionality of the Policy Control Function (PCF) in 5GS?",
+    "category": "architecture",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "6.2.7",
+    "expected_page": "429-430",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_005",
+    "question": "Describe the functions of Unified Data Management (UDM).",
+    "category": "architecture",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "6.2.4",
+    "expected_page": "427-428",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_006",
+    "question": "What is the purpose of the Authentication Server Function (AUSF)?",
+    "category": "architecture",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "6.2.5",
+    "expected_page": "428",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_007",
+    "question": "What is the purpose of Network Repository Function (NRF) in service discovery?",
+    "category": "architecture",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "6.2.6",
+    "expected_page": "428-429",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_008",
+    "question": "Explain the 5G QoS Flow architecture and 5QI concept in TS 23.501.",
+    "category": "architecture",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "5.7",
+    "expected_page": "194",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_009",
+    "question": "What is Inter PLMN UP Security (IPUPS) functionality in roaming reference architectures?",
+    "category": "architecture",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "4.2.4",
+    "expected_page": "42-43",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_010",
+    "question": "What reference points connect the AMF with other network functions like UE, RAN, and SMF?",
+    "category": "architecture",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "4.2.7",
+    "expected_page": "50",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_011",
+    "question": "Explain the Registration Management concepts and states (RM-REGISTERED and RM-DEREGISTERED).",
+    "category": "procedure",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "5.3.2",
+    "expected_page": "82-83",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_012",
+    "question": "Explain the General Registration procedure and its initiation in 3GPP TS 23.502.",
+    "category": "procedure",
+    "expected_document": "3GPP TS 23.502",
+    "expected_clause": "4.2.2.2",
+    "expected_page": "25",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_013",
+    "question": "What are the different types of Registration procedures supported in 5GS (Initial, Mobility, Periodic)?",
+    "category": "procedure",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "5.3.2.1",
+    "expected_page": "82",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_014",
+    "question": "How is UE Registration state updated upon receiving Registration Accept or Reject?",
+    "category": "procedure",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "5.3.2.2.2",
+    "expected_page": "83",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_015",
+    "question": "Explain the UE or Network initiated Deregistration procedure in TS 23.502.",
+    "category": "procedure",
+    "expected_document": "3GPP TS 23.502",
+    "expected_clause": "4.2.2.3",
+    "expected_page": "56",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_016",
+    "question": "Describe the UE Requested PDU Session Establishment procedure in TS 23.502.",
+    "category": "procedure",
+    "expected_document": "3GPP TS 23.502",
+    "expected_clause": "4.3.2.2",
+    "expected_page": "78",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_017",
+    "question": "What steps are involved in Xn-based handover without UPF relocation in TS 23.502?",
+    "category": "procedure",
+    "expected_document": "3GPP TS 23.502",
+    "expected_clause": "4.9.1.2",
+    "expected_page": "194",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_018",
+    "question": "Describe the Service Request procedures and when they are triggered by the UE or network.",
+    "category": "procedure",
+    "expected_document": "3GPP TS 23.502",
+    "expected_clause": "4.2.3.2",
+    "expected_page": "63",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_019",
+    "question": "How does Network Slice selection (NSSF) interact with AMF during the Registration Procedure?",
+    "category": "cross_spec",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "5.15.5",
+    "expected_page": "233",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_020",
+    "question": "How does the SMF interact with UPF via N4 reference point during PDU session establishment?",
+    "category": "cross_spec",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "5.8.2",
+    "expected_page": "205",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_021",
+    "question": "How are QoS rules and profiles signaled between SMF, UPF, and (R)AN?",
+    "category": "cross_spec",
+    "expected_document": "3GPP TS 23.501",
+    "expected_clause": "5.7.1",
+    "expected_page": "194",
+    "should_abstain": false
+  },
+  {
+    "id": "bench_022",
+    "question": "What is the capital city of France and what is its official population?",
+    "category": "negative_abstention",
+    "expected_document": null,
+    "expected_clause": null,
+    "expected_page": null,
+    "should_abstain": true
+  },
+  {
+    "id": "bench_023",
+    "question": "How do you prepare a traditional Italian Margherita pizza dough?",
+    "category": "negative_abstention",
+    "expected_document": null,
+    "expected_clause": null,
+    "expected_page": null,
+    "should_abstain": true
+  },
+  {
+    "id": "bench_024",
+    "question": "Explain the 6G Quantum teleportation routing algorithm defined in 3GPP TS 23.501.",
+    "category": "negative_abstention",
+    "expected_document": null,
+    "expected_clause": null,
+    "expected_page": null,
+    "should_abstain": true
+  },
+  {
+    "id": "bench_025",
+    "question": "What are the quarterly financial earnings and revenue for Microsoft in 2025?",
+    "category": "negative_abstention",
+    "expected_document": null,
+    "expected_clause": null,
+    "expected_page": null,
+    "should_abstain": true
+  }
+]

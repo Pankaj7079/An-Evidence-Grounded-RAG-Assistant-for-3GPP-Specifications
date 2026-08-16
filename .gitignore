@@ -1,20 +1,21 @@
-.env/
+# Environment variables & secrets
+.env
+.env.local
+*.env
+.streamlit/secrets.toml
+
+# Virtual environment & Python cache
 .venv/
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
-storage/qdrant/
-storage/chroma/
-storage/relationships/*.tmp
-.streamlit/secrets.toml
+*.py[cod]
+*$py.class
+*.egg-info/
 dist/
 build/
-*.egg-info/
+.pytest_cache/
 
-docs/
-
-data/
-.agents/
-
+# Local Vector Storage & Temporary artifacts
+storage/qdrant/
+storage/chroma/
+*.log
+scratch/
