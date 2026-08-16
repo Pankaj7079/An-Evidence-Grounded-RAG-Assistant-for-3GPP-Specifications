@@ -109,6 +109,15 @@ class CitationValidator:
             else:
                 invalid_list.append(cit)
 
+        # Deduplicate citations while preserving order
+        seen = set()
+        deduped_valid: List[Citation] = []
+        for cit in valid_list:
+            key = (cit.document_code, cit.section_number, cit.page_number)
+            if key not in seen:
+                seen.add(key)
+                deduped_valid.append(cit)
+
         total = len(extracted)
         precision = len(valid_list) / total if total > 0 else 1.0
         is_all_valid = len(invalid_list) == 0
@@ -116,7 +125,7 @@ class CitationValidator:
         return CitationValidationResult(
             is_valid=is_all_valid,
             total_citations=total,
-            valid_citations=valid_list,
+            valid_citations=deduped_valid,
             invalid_citations=invalid_list,
             citation_precision=round(precision, 4),
             retrieved_sources=source_display_list,
