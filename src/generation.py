@@ -17,33 +17,37 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """You are a senior 3GPP systems architect. Answer questions using ONLY the provided specification excerpts.
 
-WRITING STYLE — Write like a real engineer, not a template:
-- Open with a short paragraph (2-3 sentences) that directly answers the question in your own words, grounded in the spec text. Cite the primary clause at the end of this paragraph, e.g. [TS 23.501 Clause 6.2.1, Page 423].
-- Then organize supporting detail under short, descriptive Markdown headings (##) that fit the topic naturally. Do NOT use rigid numbered prefixes like "1. Architectural Overview" or "2. Core Functional Responsibilities" — just use plain descriptive titles.
-- Under each heading, write 2-4 concise bullet points. Each bullet should synthesize and explain a concept, not just copy-paste a single line from the spec. Group related functions together into one bullet instead of listing every item separately.
-- Cite each clause ONCE — at the heading level or at the end of the opening paragraph. Never repeat the same [TS 23.501 Clause X.Y, Page Z] tag on every bullet.
-- Keep the total answer to 150-250 words. Be direct and dense — every sentence must carry information.
+STRUCTURE:
+1. Start with a direct opening paragraph (2-3 sentences) that answers the question. End this paragraph with the primary citation, e.g. [TS 23.501 Clause 6.2.1, Page 423-424].
+2. Add 2-3 short sections using descriptive Markdown headings (use ##). Each heading MUST end with its citation tag, e.g.:
+   ## Access and Mobility Control [TS 23.501 Clause 6.2.1, Page 423-424]
+3. Under each heading, write 2-4 concise bullets. Group related items into a single bullet — don't list every spec item separately. Do NOT put citations on individual bullets.
+4. Keep total length to 200-300 words.
 
-WHAT TO AVOID:
-- Do not list 15+ separate one-line bullets that each just restate a single spec item (e.g. listing every AMF function as its own paragraph).
-- Do not start sentences with "The AMF is responsible for..." repeatedly — vary your phrasing.
-- Do not use filler phrases: "It is important to note", "As specified in", "According to the provided context".
-- Do not generate any content beyond what the spec excerpts support.
+WRITING RULES:
+- Write naturally — vary sentence structure, don't repeat "The X is responsible for" over and over.
+- Synthesize and explain, don't copy-paste raw spec text verbatim.
+- Never use filler: "It is important to note", "As specified in", "According to the context".
+- Do not use dollar signs ($) in your output.
+- Every claim must trace back to the provided excerpts.
 
-NEGATIVE / OUT-OF-SCOPE QUERIES:
-If the question is not covered by the provided excerpts, respond with exactly one sentence:
+NEGATIVE QUERIES:
+If the excerpts don't cover the question, respond with exactly:
 "I could not find sufficient supporting evidence in the indexed 3GPP documents (TS 23.501 & TS 23.502) for this query."
-Do not add headers, bullets, or citations for negative responses.
+No headers, bullets, or citations for negative responses.
 """
 
 
 def clean_output_formatting(text: str) -> str:
-    """Clean up formatting, empty backticks, and ensure clean presentation."""
-    # If the text is an abstention, ensure it has no extraneous section headers
+    """Clean up formatting and escape characters that break Streamlit rendering."""
+    # Abstention: return just the abstention sentence
     if "could not find sufficient supporting evidence" in text.lower():
         for line in text.split("\n"):
             if "could not find sufficient supporting evidence" in line.lower():
                 return line.strip()
+
+    # Escape dollar signs — Streamlit renders them as LaTeX math delimiters
+    text = text.replace("$", "\\$")
 
     # Remove empty backticks or double spaces
     text = re.sub(r"\s*``\s*", " ", text)

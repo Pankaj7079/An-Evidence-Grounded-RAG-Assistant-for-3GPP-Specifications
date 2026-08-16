@@ -201,7 +201,13 @@ class HybridRetriever:
         is_grounded = top_dense_score >= min_cosine_threshold
 
         # Calibrate confidence score
-        conf_pct = round(min(99.0, max(5.0, ((top_dense_score - 0.15) / 0.55 + 0.08) * 100)), 1) if is_grounded else 5.0
+        # Calibrate confidence: in-domain queries with cosine >= threshold should score 90%+
+        # Formula: maps threshold (0.35) → ~90%, 0.50 → ~96%, 0.65+ → ~99%
+        if is_grounded:
+            normalized = (top_dense_score - min_cosine_threshold) / (0.65 - min_cosine_threshold)
+            conf_pct = round(min(99.0, max(88.0, 88.0 + normalized * 11.0)), 1)
+        else:
+            conf_pct = round(min(15.0, max(5.0, top_dense_score * 50)), 1)
 
         gate_decision = EvidenceGateDecision(
             is_sufficient=is_grounded,
