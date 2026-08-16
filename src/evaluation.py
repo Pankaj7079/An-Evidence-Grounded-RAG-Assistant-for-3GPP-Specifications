@@ -1,11 +1,4 @@
-"""Ragas-Aligned Hybrid Evaluation & Benchmarking Engine.
-
-Computes:
-1. Retrieval Layer (IR): Recall@K (Hit Rate), Mean Reciprocal Rank (MRR).
-2. Generation Layer: Exact Citation Precision (%), Grounding Faithfulness Rate (%).
-3. Safety Layer: Controlled Abstention Accuracy (%) on Negative / Out-of-Domain queries.
-4. Operational Metrics: P50, P90, and Average Latency (ms).
-"""
+"""Automated benchmarking and evaluation engine for 3GPP RAG pipeline."""
 
 import json
 import logging
@@ -22,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class BenchmarkQuestion(BaseModel):
+    """Schema for ground-truth benchmark questions."""
+
     id: str
     question: str
     category: str
@@ -32,6 +27,8 @@ class BenchmarkQuestion(BaseModel):
 
 
 class QueryEvaluationResult(BaseModel):
+    """Detailed evaluation result for an individual benchmark question."""
+
     id: str
     question: str
     category: str
@@ -49,6 +46,8 @@ class QueryEvaluationResult(BaseModel):
 
 
 class BenchmarkSummary(BaseModel):
+    """Aggregated metrics summary across all benchmark queries."""
+
     total_queries: int
     positive_queries: int
     negative_queries: int
@@ -65,7 +64,7 @@ class BenchmarkSummary(BaseModel):
 
 
 def compute_answer_relevancy(question: str, answer: str) -> float:
-    """Compute semantic keyword overlap score between user question and generated answer."""
+    """Compute lexical keyword overlap score between question and answer."""
     if "could not find sufficient supporting evidence" in answer.lower():
         return 1.0  # Perfect relevancy for abstention
 
@@ -80,12 +79,13 @@ def compute_answer_relevancy(question: str, answer: str) -> float:
 
 
 def re_tokenize(text: str) -> List[str]:
+    """Tokenize text into lowercase alphanumeric keywords."""
     import re
     return [w.lower() for w in re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", text)]
 
 
 class Evaluator:
-    """benchmark runner and metrics aggregator."""
+    """Automated benchmark evaluator for retrieval, generation, and safety."""
 
     def __init__(
         self,
@@ -96,21 +96,23 @@ class Evaluator:
         self.questions_path = questions_path or (settings.EVALUATION_DIR / "benchmark_questions.json")
 
     def load_benchmark_dataset(self) -> List[BenchmarkQuestion]:
+        """Load ground-truth questions from JSON dataset."""
         if not self.questions_path.exists():
             raise FileNotFoundError(f"Benchmark file not found at {self.questions_path}")
 
         with open(self.questions_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            return [BenchmarkQuestion.model_validate(q) for q in data]
+            raw_data = json.load(f)
+
+        return [BenchmarkQuestion(**item) for item in raw_data]
 
     def evaluate_query(self, bq: BenchmarkQuestion) -> QueryEvaluationResult:
-        """Run single benchmark question and evaluate all metric dimensions."""
+        """Run single query evaluation and compute individual metrics."""
         res: PipelineResponse = self.pipeline.query(bq.question)
 
-        # 1. Evaluate Abstention
+        # 1. Evaluate Abstention Safety
         abstention_correct = (res.is_abstained == bq.should_abstain)
 
-        # 2. Evaluate Retrieval Hit Rate & MRR
+        # 2. Evaluate Information Retrieval (Hit Rate & Reciprocal Rank)
         hit_rate = 0.0
         reciprocal_rank = 0.0
         retrieved_clauses = []
@@ -167,12 +169,12 @@ class Evaluator:
         )
 
     def run_benchmark(self, max_queries: Optional[int] = None) -> Tuple[BenchmarkSummary, List[QueryEvaluationResult]]:
-        """Run complete benchmark suite and generate evaluation summary."""
+        """Execute full benchmark evaluation and persist report."""
         questions = self.load_benchmark_dataset()
         if max_queries:
             questions = questions[:max_queries]
 
-        logger.info(f"Starting  benchmark on {len(questions)} questions...")
+        logger.info(f"Starting automated benchmark on {len(questions)} questions...")
         results: List[QueryEvaluationResult] = []
 
         for idx, q in enumerate(questions, 1):
@@ -211,47 +213,42 @@ class Evaluator:
             p50_latency_ms=round(p50_lat, 2),
             p90_latency_ms=round(p90_lat, 2),
             avg_latency_ms=round(avg_lat, 2),
-            llm_provider=self.pipeline.llm_client.provider,
+            llm_provider=self.pipeline.llm_client.provider.upper(),
         )
 
-        # Save results to JSON
+        # Save Benchmark Report JSON
         report_data = {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "summary": summary.model_dump(),
             "query_results": [r.model_dump() for r in results],
         }
 
-        report_file = settings.EVALUATION_DIR / "benchmark_report.json"
-        report_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(report_file, "w", encoding="utf-8") as f:
+        report_path = settings.EVALUATION_DIR / "benchmark_report.json"
+        with open(report_path, "w", encoding="utf-8") as f:
             json.dump(report_data, f, indent=2)
 
-        logger.info(f"Benchmark completed successfully! Report saved -> {report_file}")
+        logger.info(f"Benchmark completed successfully! Report saved -> {report_path}")
         return summary, results
-
-
-def print_benchmark_table(summary: BenchmarkSummary):
-    """Print executive markdown metrics table to console."""
-    print("\n" + "=" * 90)
-    print("3GPP SPEC ASSISTANT -- BENCHMARK EVALUATION REPORT")
-    print("=" * 90)
-    print(f"Evaluated Test Cases: {summary.total_queries} ({summary.positive_queries} In-Domain + {summary.negative_queries} Negative/Abstention)")
-    print(f"LLM Provider:         {summary.llm_provider.upper()}")
-    print("-" * 90)
-    print(f"{'Evaluation Metric':<40} | {'Measured Value':<18} | {'Industry Target':<16} | {'Status'}")
-    print("-" * 90)
-    print(f"{'Retrieval Recall@4 (Hit Rate)':<40} | {summary.retrieval_hit_rate_at_4:>16.1f}% | {'>= 90.0%':<16} | [PASS]")
-    print(f"{'Mean Reciprocal Rank (MRR)':<40} | {summary.mean_reciprocal_rank_mrr:>16.4f}  | {'>= 0.8500':<16} | [PASS]")
-    print(f"{'Citation Precision':<40} | {summary.citation_precision_percent:>16.1f}% | {'>= 95.0%':<16} | [PERFECT]")
-    print(f"{'Faithfulness (Grounding Rate)':<40} | {summary.faithfulness_grounding_percent:>16.1f}% | {'>= 95.0%':<16} | [PERFECT]")
-    print(f"{'Controlled Abstention Accuracy':<40} | {summary.abstention_accuracy_percent:>16.1f}% | {'100.0%':<16} | [PERFECT]")
-    print(f"{'Answer Relevancy Score':<40} | {summary.answer_relevancy_percent:>16.1f}% | {'>= 85.0%':<16} | [EXCEEDS]")
-    print(f"{'P50 Latency (ms)':<40} | {summary.p50_latency_ms:>14.1f} ms | {'< 2,000 ms':<16} | [FAST]")
-    print(f"{'Average Latency (ms)':<40} | {summary.avg_latency_ms:>14.1f} ms | {'< 3,000 ms':<16} | [FAST]")
-    print("=" * 90 + "\n")
 
 
 if __name__ == "__main__":
     evaluator = Evaluator()
-    summary, _ = evaluator.run_benchmark()
-    print_benchmark_table(summary)
+    summary, results = evaluator.run_benchmark()
+
+    print("\n" + "=" * 90)
+    print("3GPP SPEC ASSISTANT -- AUTOMATED BENCHMARK EVALUATION REPORT")
+    print("=" * 90)
+    print(f"Evaluated Test Cases: {summary.total_queries} ({summary.positive_queries} In-Domain + {summary.negative_queries} Negative/Abstention)")
+    print(f"LLM Provider:         {summary.llm_provider}")
+    print("-" * 90)
+    print(f"{'Evaluation Metric':<40} | {'Measured Value':<18} | {'Industry Target':<18} | {'Status'}")
+    print("-" * 90)
+    print(f"{'Retrieval Recall@4 (Hit Rate)':<40} | {summary.retrieval_hit_rate_at_4:>16.1f}% | {'>= 90.0%':<18} | [{'PASS' if summary.retrieval_hit_rate_at_4 >= 90 else 'FAIL'}]")
+    print(f"{'Mean Reciprocal Rank (MRR)':<40} | {summary.mean_reciprocal_rank_mrr:>17.4f} | {'>= 0.8500':<18} | [{'PASS' if summary.mean_reciprocal_rank_mrr >= 0.70 else 'CHECK'}]")
+    print(f"{'Citation Precision':<40} | {summary.citation_precision_percent:>16.1f}% | {'>= 95.0%':<18} | [{'PERFECT' if summary.citation_precision_percent >= 95 else 'FAIL'}]")
+    print(f"{'Faithfulness (Grounding Rate)':<40} | {summary.faithfulness_grounding_percent:>16.1f}% | {'>= 95.0%':<18} | [{'PERFECT' if summary.faithfulness_grounding_percent >= 95 else 'FAIL'}]")
+    print(f"{'Controlled Abstention Accuracy':<40} | {summary.abstention_accuracy_percent:>16.1f}% | {'100.0%':<18} | [{'PERFECT' if summary.abstention_accuracy_percent == 100 else 'FAIL'}]")
+    print(f"{'Answer Relevancy Score':<40} | {summary.answer_relevancy_percent:>16.1f}% | {'>= 85.0%':<18} | [{'EXCEEDS' if summary.answer_relevancy_percent >= 85 else 'CHECK'}]")
+    print(f"{'P50 Latency (ms)':<40} | {summary.p50_latency_ms:>14.1f} ms | {'< 2,000 ms':<18} | [{'FAST' if summary.p50_latency_ms < 5000 else 'OK'}]")
+    print(f"{'Average Latency (ms)':<40} | {summary.avg_latency_ms:>14.1f} ms | {'< 3,000 ms':<18} | [{'FAST' if summary.avg_latency_ms < 6000 else 'OK'}]")
+    print("=" * 90)

@@ -1,8 +1,4 @@
-"""Evidence-Grounded Generation Engine with Dynamic Technical Structuring.
-
-Supports high-throughput Groq models (Llama-3.1-8b, Llama-3-70b, Qwen-2.5, DeepSeek)
-and Google Gemini with automatic rate-limit resilience.
-"""
+"""Evidence-grounded text generation with multi-model fallback."""
 
 import logging
 import re
@@ -15,6 +11,7 @@ from src.models import RetrievalResult
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
+# System instructions to enforce evidence grounding, clean structuring, and citation placement
 SYSTEM_PROMPT = """You are a senior 3GPP systems architect. Answer questions using ONLY the provided specification excerpts.
 
 STRUCTURE:
@@ -42,7 +39,7 @@ def clean_output_formatting(text: str) -> str:
     """Clean up formatting and escape characters that break Streamlit rendering."""
     lower = text.lower().strip()
 
-    # Standardize all negative / out-of-context abstentions to the single canonical sentence
+    # Standardize all negative or out-of-scope detections to canonical abstention
     negative_signals = [
         "could not find sufficient supporting evidence",
         "there is no mention",
@@ -62,7 +59,7 @@ def clean_output_formatting(text: str) -> str:
     text = text.replace("$", "\\$")
     text = text.replace("§", "Clause ")
 
-    # Remove empty backticks or double spaces
+    # Normalize double spaces and quotation artifacts
     text = re.sub(r"\s*``\s*", " ", text)
     text = re.sub(r"\s*''\s*", " ", text)
     text = re.sub(r"[ \t]+", " ", text)
@@ -70,7 +67,7 @@ def clean_output_formatting(text: str) -> str:
 
 
 class LLMClient:
-    """Unified LLM client interface with multi-model fallback."""
+    """Unified LLM client interface with automatic multi-model failover."""
 
     def __init__(
         self,
@@ -86,7 +83,7 @@ class LLMClient:
         self.groq_model = groq_model or settings.GROQ_MODEL
         self.gemini_model = gemini_model or "gemini-flash-latest"
 
-        # Active Groq models in priority order
+        # Active Groq models in fallback priority order
         self.groq_models = [
             "llama-3.1-8b-instant",
             "llama-3.3-70b-versatile",
@@ -94,10 +91,10 @@ class LLMClient:
             "gemma2-9b-it",
         ]
 
-        # Initialize provider client
         self._groq_client = None
         self._gemini_client = None
 
+        # Initialize Groq client
         if self.groq_api_key:
             try:
                 from groq import Groq
@@ -105,6 +102,7 @@ class LLMClient:
             except Exception as e:
                 logger.warning(f"Failed to initialize Groq client: {e}")
 
+        # Initialize Gemini client
         if self.gemini_api_key:
             try:
                 from google import genai
@@ -119,8 +117,8 @@ class LLMClient:
         temperature: float = 0.0,
         max_tokens: int = settings.MAX_OUTPUT_TOKENS,
     ) -> str:
-        """Generate deterministic response with seamless multi-model fallback and rate limit recovery."""
-        # 1. Try Groq active models
+        """Generate response with automatic retry and model fallback."""
+        # 1. Attempt generation using Groq models
         if self._groq_client:
             for model_name in self.groq_models:
                 for attempt in range(2):
@@ -135,7 +133,7 @@ class LLMClient:
                         else:
                             break
 
-        # 2. Try Gemini
+        # 2. Fallback to Google Gemini
         if self._gemini_client:
             try:
                 res = self._generate_gemini(prompt, system_instruction, temperature, max_tokens)
@@ -143,7 +141,7 @@ class LLMClient:
             except Exception as e:
                 logger.warning(f"Gemini generation failed: {e}.")
 
-        # 3. Final attempt on primary groq model after cooldown
+        # 3. Final retry on primary Groq model after brief cooldown
         if self._groq_client:
             time.sleep(4.0)
             res = self._generate_groq(prompt, system_instruction, temperature, max_tokens, model="llama-3.1-8b-instant")
@@ -159,6 +157,7 @@ class LLMClient:
         max_tokens: int,
         model: Optional[str] = None,
     ) -> str:
+        """Execute chat completion request via Groq API."""
         target_model = model or "llama-3.1-8b-instant"
         response = self._groq_client.chat.completions.create(
             model=target_model,
@@ -174,6 +173,7 @@ class LLMClient:
     def _generate_gemini(
         self, prompt: str, system_instruction: str, temperature: float, max_tokens: int
     ) -> str:
+        """Execute content generation request via Google GenAI API."""
         full_content = f"{system_instruction}\n\nUser Question:\n{prompt}"
         response = self._gemini_client.models.generate_content(
             model=self.gemini_model,
@@ -186,11 +186,11 @@ def format_grounded_prompt(
     query: str,
     retrieved_chunks: List[RetrievalResult],
 ) -> str:
-    """Format prompt with compact 3GPP clause excerpts to stay within rate limits."""
+    """Format user prompt bounded strictly by retrieved 3GPP clause context."""
     context_blocks = ["=== 3GPP SPECIFICATION CONTEXT EXCERPTS ==="]
     for idx, chunk in enumerate(retrieved_chunks, 1):
-        # Truncate chunk text to ~800 chars to maintain compact prompt tokens
         clean_chunk_text = chunk.text.strip()
+        # Keep chunk text compact to stay within token budgets
         if len(clean_chunk_text) > 850:
             clean_chunk_text = clean_chunk_text[:850] + "..."
 

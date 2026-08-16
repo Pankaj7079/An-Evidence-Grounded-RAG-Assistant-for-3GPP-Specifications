@@ -1,8 +1,4 @@
-"""All-in-One Native Qdrant Hybrid Retrieval Engine with Server-Side RRF Fusion.
-
-Optimized for sub-second retrieval latency: executes a single server-side hybrid
-search and evaluates evidence grounding directly from dense & sparse signals.
-"""
+"""Native Qdrant hybrid retrieval with server-side RRF and evidence gating."""
 
 import logging
 from typing import Any, Dict, List, Optional, Tuple
@@ -21,13 +17,14 @@ logger = logging.getLogger(__name__)
 
 
 class HybridRetriever:
-    """High-performance All-in-One Qdrant Hybrid Retriever using native Dense + Sparse BM25 and RRF."""
+    """Hybrid dense and sparse retriever using Qdrant and Reciprocal Rank Fusion."""
 
     def __init__(
         self,
         qdrant_client: Optional[QdrantClient] = None,
         dense_model_name: Optional[str] = None,
     ):
+        # Initialize client and embedding models
         self.client = qdrant_client or get_qdrant_client()
         self.dense_model_name = dense_model_name or settings.EMBEDDING_MODEL
         self.dense_model = SentenceTransformer(self.dense_model_name)
@@ -38,7 +35,7 @@ class HybridRetriever:
         filter_doc: Optional[str] = None,
         filter_type: Optional[str] = None,
     ) -> Optional[rest.Filter]:
-        """Construct Qdrant payload filter."""
+        """Build Qdrant filter condition for specification code or content type."""
         conditions = []
         if filter_doc:
             conditions.append(
@@ -62,7 +59,8 @@ class HybridRetriever:
         top_k: int = 5,
         filter_doc: Optional[str] = None,
     ) -> List[Tuple[str, float, Dict[str, Any]]]:
-        """Perform dense vector search returning (chunk_id, score, payload) tuples."""
+        """Perform dense semantic search returning (chunk_id, score, payload) tuples."""
+        # Generate normalized dense embedding
         dense_vector = self.dense_model.encode(query, normalize_embeddings=True).tolist()
         qdrant_filter = self._build_filter(filter_doc)
 
@@ -87,7 +85,8 @@ class HybridRetriever:
         top_k: int = 5,
         filter_doc: Optional[str] = None,
     ) -> List[Tuple[str, float, Dict[str, Any]]]:
-        """Perform native BM25 sparse vector search returning (chunk_id, score, payload) tuples."""
+        """Perform BM25 sparse lexical search returning (chunk_id, score, payload) tuples."""
+        # Generate BM25 sparse vector
         sparse_vecs = list(self.sparse_model.embed([query]))
         if not sparse_vecs or len(sparse_vecs[0].indices) == 0:
             return []
@@ -121,45 +120,51 @@ class HybridRetriever:
         filter_type: Optional[str] = None,
         min_cosine_threshold: float = settings.MIN_RELEVANCE_SCORE,
     ) -> Tuple[EvidenceGateDecision, List[RetrievalResult]]:
-        """Single-shot hybrid retrieval + Evidence Gate evaluation in one fast network call."""
+        """Execute server-side hybrid RRF retrieval and evaluate evidence gating."""
         dense_vector = self.dense_model.encode(query, normalize_embeddings=True).tolist()
         sparse_vecs = list(self.sparse_model.embed([query]))
         qdrant_filter = self._build_filter(filter_doc, filter_type)
 
-        candidate_k = max(top_k * 2, 20)
-        prefetch_queries = [
-            rest.Prefetch(
+        # Fallback to dense-only if sparse tokenizer returns empty
+        if not sparse_vecs or len(sparse_vecs[0].indices) == 0:
+            dense_points = self.client.query_points(
+                collection_name=settings.COLLECTION_NAME,
                 query=dense_vector,
                 using="dense",
-                limit=candidate_k,
-                filter=qdrant_filter,
-            )
-        ]
-
-        if sparse_vecs and len(sparse_vecs[0].indices) > 0:
+                limit=top_k,
+                query_filter=qdrant_filter,
+            ).points
+            fused_points = dense_points
+        else:
             s_vec = sparse_vecs[0]
-            prefetch_queries.append(
-                rest.Prefetch(
-                    query=rest.SparseVector(
-                        indices=s_vec.indices.tolist(),
-                        values=s_vec.values.tolist(),
+            # Server-side Reciprocal Rank Fusion on Qdrant
+            rrf_response = self.client.query_points(
+                collection_name=settings.COLLECTION_NAME,
+                prefetch=[
+                    rest.Prefetch(
+                        query=dense_vector,
+                        using="dense",
+                        limit=top_k * 2,
+                        filter=qdrant_filter,
                     ),
-                    using="sparse",
-                    limit=candidate_k,
-                    filter=qdrant_filter,
-                )
+                    rest.Prefetch(
+                        query=rest.SparseVector(
+                            indices=s_vec.indices.tolist(),
+                            values=s_vec.values.tolist(),
+                        ),
+                        using="sparse",
+                        limit=top_k * 2,
+                        filter=qdrant_filter,
+                    ),
+                ],
+                query=rest.FusionQuery(fusion=rest.Fusion.RRF),
+                limit=top_k,
             )
+            fused_points = rrf_response.points
 
-        # Single Server-Side RRF Hybrid Query
-        response = self.client.query_points(
-            collection_name=settings.COLLECTION_NAME,
-            prefetch=prefetch_queries,
-            query=rest.FusionQuery(fusion=rest.Fusion.RRF),
-            limit=top_k,
-        )
-
-        results: List[RetrievalResult] = []
-        for hit in response.points:
+        # Convert points to structured RetrievalResult instances
+        results = []
+        for hit in fused_points:
             payload = hit.payload
             results.append(
                 RetrievalResult(
@@ -194,15 +199,13 @@ class HybridRetriever:
                 [],
             )
 
-        # Dense-cosine check for ground-truth domain relevance
+        # Check top dense cosine score for domain relevance gating
         dense_hits = self.dense_search(query, top_k=1, filter_doc=filter_doc)
         top_dense_score = dense_hits[0][1] if dense_hits else 0.0
 
         is_grounded = top_dense_score >= min_cosine_threshold
 
-        # Calibrate confidence score
-        # Calibrate confidence: in-domain queries with cosine >= threshold should score 90%+
-        # Formula: maps threshold (0.35) → ~90%, 0.50 → ~96%, 0.65+ → ~99%
+        # Calibrate confidence: in-domain queries score 90%+, out-of-domain score <= 15%
         if is_grounded:
             normalized = (top_dense_score - min_cosine_threshold) / (0.65 - min_cosine_threshold)
             conf_pct = round(min(99.0, max(88.0, 88.0 + normalized * 11.0)), 1)
@@ -241,6 +244,6 @@ class HybridRetriever:
         top_k: int = settings.CANDIDATE_K,
         min_cosine_threshold: float = settings.MIN_RELEVANCE_SCORE,
     ) -> EvidenceGateDecision:
-        """Evaluate evidence gate confidence."""
+        """Evaluate evidence gate decision for a query."""
         gate_decision, _ = self.retrieve_with_gate(query, top_k, min_cosine_threshold=min_cosine_threshold)
         return gate_decision

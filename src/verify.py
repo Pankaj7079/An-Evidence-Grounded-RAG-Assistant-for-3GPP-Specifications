@@ -1,4 +1,4 @@
-"""Human-friendly CLI tool to inspect and verify parsed chunks against original 3GPP PDFs."""
+"""CLI tool to inspect extracted chunks against raw 3GPP PDFs."""
 
 import argparse
 import json
@@ -23,6 +23,7 @@ def verify(doc_code: str = "TS 23.501", clause_query: str = "", page_query: int 
         print("Missing raw PDF or processed JSONL file. Run ingestion first.")
         return
 
+    # Open PDF and load extracted chunks
     doc = pymupdf.open(str(pdf_path))
     with open(jsonl_path, "r", encoding="utf-8") as f:
         chunks = [json.loads(line) for line in f]
@@ -32,7 +33,7 @@ def verify(doc_code: str = "TS 23.501", clause_query: str = "", page_query: int 
     print(f"PDF Total Pages: {len(doc)} | Total Extracted Chunks: {len(chunks)}")
     print("=" * 80)
 
-    # Filter matching chunks
+    # Filter matching chunks by clause or page
     matched_chunks = []
     for c in chunks:
         m = c["metadata"]
@@ -64,9 +65,9 @@ def verify(doc_code: str = "TS 23.501", clause_query: str = "", page_query: int 
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Human-friendly tool to inspect chunks against 3GPP PDFs")
+    parser = argparse.ArgumentParser(description="Tool to inspect chunks against 3GPP PDFs")
     parser.add_argument("--doc", default="TS 23.501", help="Specification: TS 23.501 or TS 23.502")
-    parser.add_argument("--clause", default="Foreword", help="Clause number to inspect (e.g. Foreword, 4.2.4, 5.2.2)")
+    parser.add_argument("--clause", default="Foreword", help="Clause number to inspect (e.g. Foreword, 4.2.4, 6.2.1)")
     parser.add_argument("--page", type=int, default=0, help="Page number to inspect")
     args = parser.parse_args()
 

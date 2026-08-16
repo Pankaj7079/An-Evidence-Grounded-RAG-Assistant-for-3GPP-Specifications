@@ -1,13 +1,4 @@
-"""End-to-End Evidence-Grounded RAG Pipeline with Two-Stage Retrieval & Re-ranking.
-
-Pipeline Flow:
-1. Evidence Gate Evaluation (Pre-retrieval confidence check)
-2. Stage 1: Native Qdrant Multi-Vector Hybrid Search (Dense + Sparse BM25 -> Top 15 Candidates)
-3. Stage 2: Cross-Encoder Re-ranking (ms-marco-MiniLM-L-6-v2 -> Top 4 High-Precision Chunks)
-4. Grounded Prompt Formulation (Strict context boundaries)
-5. Deterministic LLM Generation (Groq Llama-3.3-70b / Gemini @ temp=0.0)
-6. Post-Generation Citation Validation (Zero-hallucination verification)
-"""
+"""End-to-end evidence-grounded RAG pipeline orchestration."""
 
 import logging
 import time
@@ -26,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class PipelineResponse(BaseModel):
-    """Complete structured response from the 3GPP Spec Assistant pipeline."""
+    """Structured response from the RAG pipeline."""
 
     query: str
     answer: str
@@ -40,7 +31,7 @@ class PipelineResponse(BaseModel):
 
 
 class RAGPipeline:
-    """Production Two-Stage Evidence-Grounded 3GPP Spec Assistant RAG Pipeline."""
+    """Production Two-Stage Evidence-Grounded RAG Pipeline for 3GPP Specifications."""
 
     def __init__(
         self,
@@ -48,6 +39,7 @@ class RAGPipeline:
         reranker: Optional[CrossEncoderReranker] = None,
         llm_client: Optional[LLMClient] = None,
     ):
+        # Initialize pipeline components
         self.retriever = retriever or HybridRetriever()
         self.reranker = reranker or CrossEncoderReranker()
         self.llm_client = llm_client or LLMClient()
@@ -61,11 +53,11 @@ class RAGPipeline:
         candidate_k: int = settings.CANDIDATE_K,
         final_k: int = settings.FINAL_CONTEXT_K,
     ) -> PipelineResponse:
-        """Process user question through Two-Stage Retrieval, Re-ranking, and Generation."""
+        """Process user question through Retrieval, Re-ranking, Generation, and Validation."""
         start_time = time.perf_counter()
         clean_question = question.strip()
 
-        # Step 1: Fast Single-Shot Hybrid Retrieval + Evidence Gate Evaluation
+        # Step 1: Hybrid retrieval and evidence gate check
         gate_decision, candidate_chunks = self.retriever.retrieve_with_gate(
             query=clean_question,
             top_k=candidate_k,
@@ -74,7 +66,7 @@ class RAGPipeline:
             min_cosine_threshold=settings.MIN_RELEVANCE_SCORE,
         )
 
-        # Step 2: Immediate Safe Abstention if Gate Fails
+        # Step 2: Immediate abstention if evidence gate fails
         if not gate_decision.is_sufficient or not candidate_chunks:
             elapsed_ms = (time.perf_counter() - start_time) * 1000
             abstain_text = (
@@ -93,27 +85,27 @@ class RAGPipeline:
                 is_abstained=True,
             )
 
-        # Step 3: Stage 2 - Cross-Encoder Re-ranking
+        # Step 3: Cross-Encoder transformer re-ranking
         top_chunks = self.reranker.rerank(
             query=clean_question,
             candidates=candidate_chunks,
             top_k=final_k,
         )
 
-        # Step 4: Grounded Prompt Formulation
+        # Step 4: Format grounded prompt with clause excerpts
         user_prompt = format_grounded_prompt(
             query=clean_question,
             retrieved_chunks=top_chunks,
         )
 
-        # Step 5: Deterministic LLM Generation
+        # Step 5: Deterministic LLM response generation
         raw_answer = self.llm_client.generate(user_prompt)
         is_llm_abstained = (
             raw_answer.strip().lower().startswith("i could not find sufficient supporting evidence")
             or (len(raw_answer.strip()) < 150 and "could not find sufficient supporting evidence" in raw_answer.lower())
         )
 
-        # Step 6: Post-Generation Citation Validation
+        # Step 6: Validate citations against retrieved sources
         validation_result = self.validator.validate(raw_answer, top_chunks)
 
         latency = (time.perf_counter() - start_time) * 1000

@@ -1,4 +1,4 @@
-"""Entry point for the 3GPP Telecom Spec Assistant."""
+"""CLI launcher for the 3GPP RAG Assistant."""
 
 import subprocess
 import sys
@@ -6,9 +6,10 @@ import sys
 
 def main():
     """Launch the Streamlit web application."""
-    print("=" * 70)
-    print("Starting 3GPP Telecom Spec Assistant Web UI (Streamlit)...")
-    print("=" * 70)
+    print("=" * 60)
+    print("Launching 3GPP Telecom Spec Chatbot (Streamlit)...")
+    print("=" * 60)
+    # Start streamlit app via current python environment
     subprocess.run([sys.executable, "-m", "streamlit", "run", "app.py"])
 
 
