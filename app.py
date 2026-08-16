@@ -1,11 +1,10 @@
-"""3GPP Telecom Spec Assistant - Humanistic Streamlit Web Interface.
+"""3GPP Telecom Spec Chatbot - Enterprise Streamlit Web Interface.
 
-An enterprise-grade, evidence-grounded AI assistant for 3GPP 5G Specifications
-(3GPP TS 23.501 System Architecture & 3GPP TS 23.502 Procedures).
+Conversational, evidence-grounded AI Chatbot for official 3GPP 5G Specifications
+(TS 23.501 System Architecture & TS 23.502 Procedures).
 """
 
 import json
-import re
 import time
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -18,17 +17,16 @@ from src.pipeline import PipelineResponse, RAGPipeline
 
 # Page Configuration
 st.set_page_config(
-    page_title="3GPP Telecom Spec Assistant",
+    page_title="3GPP Telecom Spec Chatbot",
     page_icon="📡",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# Custom Humanistic Engineering Styling (Clean, Professional, No Clichés)
+# Custom Humanistic Engineering Styling
 st.markdown(
     """
     <style>
-    /* Typography and Base Layout */
     .main {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
@@ -37,50 +35,50 @@ st.markdown(
     .telecom-header {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         color: #ffffff;
-        padding: 24px 32px;
-        border-radius: 12px;
-        margin-bottom: 24px;
+        padding: 20px 28px;
+        border-radius: 10px;
+        margin-bottom: 20px;
         border: 1px solid #334155;
     }
     .telecom-header h1 {
         color: #ffffff;
-        font-size: 26px;
+        font-size: 22px;
         font-weight: 700;
-        margin: 0 0 8px 0;
+        margin: 0 0 6px 0;
         letter-spacing: -0.02em;
     }
     .telecom-header p {
         color: #94a3b8;
-        font-size: 15px;
+        font-size: 14px;
         margin: 0;
-        line-height: 1.5;
+        line-height: 1.4;
     }
     .spec-badge {
         display: inline-block;
         background: #1e293b;
         color: #38bdf8;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 13px;
+        padding: 3px 8px;
+        border-radius: 5px;
+        font-size: 12px;
         font-weight: 600;
-        margin-right: 8px;
+        margin-right: 6px;
         border: 1px solid #0284c7;
     }
 
-    /* Metric and Telemetry Cards */
+    /* Telemetry Badges */
     .telemetry-bar {
         display: flex;
-        gap: 12px;
-        margin-bottom: 18px;
+        gap: 8px;
+        margin: 10px 0 14px 0;
         flex-wrap: wrap;
         align-items: center;
     }
     .telemetry-chip {
         background: #f8fafc;
         color: #334155;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 13px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
         font-weight: 500;
         border: 1px solid #e2e8f0;
     }
@@ -88,86 +86,59 @@ st.markdown(
         background: #f0fdf4;
         color: #166534;
         border: 1px solid #bbf7d0;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 13px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
         font-weight: 600;
     }
     .telemetry-chip-amber {
         background: #fffbeb;
         color: #92400e;
         border: 1px solid #fde68a;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    /* Inline & Card Citations */
-    .inline-citation {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #bfdbfe;
-        padding: 2px 6px;
-        border-radius: 4px;
+        padding: 4px 10px;
+        border-radius: 6px;
         font-size: 12px;
         font-weight: 600;
-        display: inline-block;
-        margin: 0 2px;
     }
     .citation-pill {
         background: #eff6ff;
         color: #1d4ed8;
         border: 1px solid #bfdbfe;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 12.5px;
+        padding: 3px 8px;
+        border-radius: 5px;
+        font-size: 12px;
         font-weight: 600;
-        margin: 3px 6px 3px 0;
+        margin: 2px 4px 2px 0;
         display: inline-block;
     }
 
-    /* Grounded Answer Card */
-    .answer-container {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-        line-height: 1.7;
-        font-size: 14.5px;
-        color: #1e293b;
-    }
-
-    /* Context Chunk Card */
+    /* Chunk Excerpt Card */
     .chunk-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-left: 4px solid #2563eb;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 12px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        border-radius: 6px;
+        padding: 14px;
+        margin-bottom: 10px;
     }
     .chunk-title {
         font-weight: 600;
-        font-size: 14px;
+        font-size: 13.5px;
         color: #0f172a;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
     }
     .chunk-meta {
         font-size: 12px;
         color: #64748b;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
     .chunk-text {
         font-size: 13px;
         color: #334155;
-        line-height: 1.6;
+        line-height: 1.55;
         background: #f8fafc;
-        padding: 10px 12px;
-        border-radius: 6px;
+        padding: 8px 12px;
+        border-radius: 5px;
         border: 1px solid #f1f5f9;
     }
     </style>
@@ -188,8 +159,8 @@ def render_header():
         """
         <div class="telecom-header">
             <h1>📡 3GPP Telecom Spec Assistant</h1>
-            <p>Evidence-grounded engineering assistant answering queries strictly from official 3GPP 5G specifications with sentence-level clause & page citations.</p>
-            <div style="margin-top: 14px;">
+            <p>Evidence-grounded conversational assistant for 3GPP 5G Specifications with exact clause and page citations.</p>
+            <div style="margin-top: 10px;">
                 <span class="spec-badge">3GPP TS 23.501 Rel-17 (5G Architecture - 888 Clauses)</span>
                 <span class="spec-badge">3GPP TS 23.502 Rel-16 (5G Procedures - 949 Clauses)</span>
             </div>
@@ -199,134 +170,180 @@ def render_header():
     )
 
 
-def format_inline_citations(text: str) -> str:
-    """Transform markdown text so inline citations render as clean badge pills."""
-    pattern = r"\[(?:3GPP\s+)?(TS\s+23\.50[12])\s+Clause\s+([^,\]]+)(?:,\s*Page\s+([^\]]+))?\]"
-    def replace_badge(match):
-        doc = match.group(1).upper().replace("  ", " ")
-        clause = match.group(2).strip()
-        page = match.group(3).strip() if match.group(3) else ""
-        page_str = f" (p. {page})" if page else ""
-        return f'<span class="inline-citation">📄 {doc} § {clause}{page_str}</span>'
-
-    return re.sub(pattern, replace_badge, text)
-
-
 def main():
     render_header()
     pipeline = get_pipeline()
 
     # Main Navigation Tabs
-    tab_query, tab_verify, tab_eval = st.tabs(
-        ["💬 Ask Specification Assistant", "🔍 Clause & Page Inspector", "📊 Benchmark & Evaluation"]
+    tab_chat, tab_verify, tab_eval = st.tabs(
+        ["💬 3GPP Specification Chatbot", "🔍 Clause & Page Inspector", "📊 Benchmark & Evaluation"]
     )
 
     # -------------------------------------------------------------
-    # TAB 1: ASK SPECIFICATION ASSISTANT
+    # TAB 1: CONVERSATIONAL CHATBOT INTERFACE
     # -------------------------------------------------------------
-    with tab_query:
-        col_left, col_right = st.columns([3, 1])
+    with tab_chat:
+        # Initialize conversation state
+        if "messages" not in st.session_state:
+            st.session_state["messages"] = [
+                {
+                    "role": "assistant",
+                    "content": "Hello! I am your **3GPP Telecom Spec Assistant**. I answer architecture, procedure, and interface questions strictly grounded in **TS 23.501** and **TS 23.502** with verified clause citations. How can I assist your engineering work today?",
+                    "response_obj": None,
+                }
+            ]
 
-        with col_right:
-            st.markdown("### ⚙️ Search Controls")
+        # Sidebar Controls
+        with st.sidebar:
+            st.markdown("### ⚙️ Specification Controls")
             spec_filter = st.selectbox(
-                "Filter Specification:",
-                ["All Specifications (TS 23.501 + TS 23.502)", "3GPP TS 23.501", "3GPP TS 23.502"],
+                "Filter Specification Knowledge:",
+                ["All Specifications (TS 23.501 + TS 23.502)", "3GPP TS 23.501 (Architecture)", "3GPP TS 23.502 (Procedures)"],
                 index=0,
             )
             filter_doc_arg = None
-            if spec_filter == "3GPP TS 23.501":
+            if "23.501" in spec_filter:
                 filter_doc_arg = "3GPP TS 23.501"
-            elif spec_filter == "3GPP TS 23.502":
+            elif "23.502" in spec_filter:
                 filter_doc_arg = "3GPP TS 23.502"
 
             st.markdown("---")
-            st.markdown("#### 💡 Suggested Questions")
-            sample_questions = [
+            st.markdown("#### 💡 Quick Prompt Suggestions")
+            quick_prompts = [
                 "What are the core functions of the AMF in 5G?",
                 "Explain the Registration procedure step-by-step in TS 23.502",
-                "What is the role of SMF and UPF via N4 interface?",
+                "Explain the role of UPF and SMF interaction via N4 interface",
                 "What is IPUPS functionality in roaming architectures?",
-                "How does Network Slice selection work via NSSF?",
-                "What is the capital of France?",  # Negative test for abstention
+                "Explain the 6G Quantum Teleportation Handover procedure in TS 23.501",  # Negative safety test
             ]
-            for sq in sample_questions:
-                if st.button(sq, key=f"btn_{sq}"):
-                    st.session_state["query_input"] = sq
 
-        with col_left:
-            query_val = st.session_state.get("query_input", "")
-            user_query = st.text_area(
-                "Enter your 3GPP question or procedure query:",
-                value=query_val,
-                height=90,
-                placeholder="e.g. What are the key functionalities of the Access and Mobility Management Function (AMF)?",
-            )
-
-            col_submit, col_clear = st.columns([1, 5])
-            with col_submit:
-                submit_btn = st.button("🚀 Search & Answer", type="primary")
-            with col_clear:
-                if st.button("Clear"):
-                    st.session_state["query_input"] = ""
+            for qp in quick_prompts:
+                if st.button(qp, key=f"chip_{qp}"):
+                    st.session_state["queued_prompt"] = qp
                     st.rerun()
 
-            if submit_btn and user_query.strip():
-                with st.spinner("Retrieving ground truth clauses and formulating grounded answer..."):
-                    start_time = time.perf_counter()
-                    response: PipelineResponse = pipeline.query(
-                        question=user_query.strip(),
-                        filter_doc=filter_doc_arg,
+            st.markdown("---")
+            if st.button("🗑️ Clear Chat History", type="secondary"):
+                st.session_state["messages"] = [
+                    {
+                        "role": "assistant",
+                        "content": "Conversation cleared. Ask any question on 3GPP TS 23.501 or TS 23.502.",
+                        "response_obj": None,
+                    }
+                ]
+                st.rerun()
+
+        # Display Chat History
+        for msg in st.session_state["messages"]:
+            avatar = "🧑‍💻" if msg["role"] == "user" else "📡"
+            with st.chat_message(msg["role"], avatar=avatar):
+                st.markdown(msg["content"])
+
+                # If assistant message has response telemetry and context
+                res_obj: Optional[PipelineResponse] = msg.get("response_obj")
+                if res_obj:
+                    # Telemetry Strip
+                    conf_val = getattr(res_obj.evidence_gate, "confidence_percent", 95.0)
+                    gate_chip = (
+                        f'<span class="telemetry-chip-green">🛡️ Evidence Gate: Grounded ({conf_val:.0f}% Confidence)</span>'
+                        if not res_obj.is_abstained
+                        else f'<span class="telemetry-chip-amber">⚠️ Evidence Gate: Abstained ({conf_val:.0f}% Confidence)</span>'
                     )
-                    elapsed = (time.perf_counter() - start_time) * 1000
+                    latency_chip = f'<span class="telemetry-chip">⚡ Latency: {res_obj.latency_ms:.1f} ms</span>'
+                    context_chip = f'<span class="telemetry-chip">📑 Context Chunks: {len(res_obj.retrieved_chunks)} (from {res_obj.candidate_count} candidates)</span>'
+                    provider_chip = f'<span class="telemetry-chip">🤖 Model: {res_obj.llm_provider.upper()}</span>'
 
-                st.markdown("### 📋 Evidence-Grounded Answer")
+                    st.markdown(
+                        f'<div class="telemetry-bar">{gate_chip}{latency_chip}{context_chip}{provider_chip}</div>',
+                        unsafe_allow_html=True,
+                    )
 
-                # Telemetry Badges with Calibrated Confidence
-                conf_val = getattr(response.evidence_gate, "confidence_percent", 95.0)
-                if not response.is_abstained:
-                    gate_chip = f'<span class="telemetry-chip-green">🛡️ Evidence Gate: Grounded ({conf_val:.0f}% Confidence)</span>'
-                else:
-                    gate_chip = f'<span class="telemetry-chip-amber">⚠️ Evidence Gate: Abstained ({conf_val:.0f}% Confidence)</span>'
+                    # Validated Citations
+                    if res_obj.citation_validation and res_obj.citation_validation.valid_citations:
+                        st.markdown("**📌 Validated Specification Citations:**")
+                        citations_html = "".join(
+                            f'<span class="citation-pill">📄 {c.document_code} Clause {c.section_number} (Page {c.page_number})</span>'
+                            for c in res_obj.citation_validation.valid_citations
+                        )
+                        st.markdown(citations_html, unsafe_allow_html=True)
 
-                latency_chip = f'<span class="telemetry-chip">⚡ Latency: {response.latency_ms:.1f} ms</span>'
-                context_chip = f'<span class="telemetry-chip">📑 Context Chunks: {len(response.retrieved_chunks)} (Filtered from {response.candidate_count})</span>'
-                provider_chip = f'<span class="telemetry-chip">🤖 Model: {response.llm_provider.upper()}</span>'
+                    # Expandable Context Inspector
+                    if res_obj.retrieved_chunks:
+                        with st.expander(f"🔎 Inspect Supporting Specification Excerpts ({len(res_obj.retrieved_chunks)} Chunks)", expanded=False):
+                            for idx, chunk in enumerate(res_obj.retrieved_chunks, 1):
+                                score_lbl = f"Cross-Encoder Score: {chunk.rerank_score}" if chunk.rerank_score is not None else f"Score: {chunk.score}"
+                                st.markdown(
+                                    f"""
+                                    <div class="chunk-card">
+                                        <div class="chunk-title">Source #{idx}: {chunk.document_code} - Clause {chunk.section_number} ({chunk.section_title})</div>
+                                        <div class="chunk-meta">Hierarchy: {chunk.section_hierarchy} | Page: {chunk.page_number} | {score_lbl}</div>
+                                        <div class="chunk-text">{chunk.text}</div>
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True,
+                                )
+
+        # Check for user input from chat_input or queued chip
+        queued_input = st.session_state.pop("queued_prompt", None)
+        chat_prompt = st.chat_input("Ask a 3GPP question or procedure (e.g. AMF functions, Registration flow)...")
+
+        active_input = queued_input or chat_prompt
+
+        if active_input:
+            # Append and render user message
+            st.session_state["messages"].append({"role": "user", "content": active_input, "response_obj": None})
+            with st.chat_message("user", avatar="🧑‍💻"):
+                st.markdown(active_input)
+
+            # Generate Assistant Response
+            with st.chat_message("assistant", avatar="📡"):
+                with st.spinner("Retrieving ground-truth clauses and verifying citations..."):
+                    res = pipeline.query(question=active_input, filter_doc=filter_doc_arg)
+
+                st.markdown(res.answer)
+
+                # Telemetry Strip
+                conf_val = getattr(res.evidence_gate, "confidence_percent", 95.0)
+                gate_chip = (
+                    f'<span class="telemetry-chip-green">🛡️ Evidence Gate: Grounded ({conf_val:.0f}% Confidence)</span>'
+                    if not res.is_abstained
+                    else f'<span class="telemetry-chip-amber">⚠️ Evidence Gate: Abstained ({conf_val:.0f}% Confidence)</span>'
+                )
+                latency_chip = f'<span class="telemetry-chip">⚡ Latency: {res.latency_ms:.1f} ms</span>'
+                context_chip = f'<span class="telemetry-chip">📑 Context Chunks: {len(res.retrieved_chunks)} (from {res.candidate_count} candidates)</span>'
+                provider_chip = f'<span class="telemetry-chip">🤖 Model: {res.llm_provider.upper()}</span>'
 
                 st.markdown(
                     f'<div class="telemetry-bar">{gate_chip}{latency_chip}{context_chip}{provider_chip}</div>',
                     unsafe_allow_html=True,
                 )
 
-                # Render Formatted Answer with Inline Citation Badges
-                formatted_html = format_inline_citations(response.answer)
-                st.markdown(formatted_html, unsafe_allow_html=True)
-
-                # Citation Pills Section
-                if response.citation_validation and response.citation_validation.valid_citations:
-                    st.markdown("#### 📌 Validated Specification Citations:")
+                if res.citation_validation and res.citation_validation.valid_citations:
+                    st.markdown("**📌 Validated Specification Citations:**")
                     citations_html = "".join(
                         f'<span class="citation-pill">📄 {c.document_code} Clause {c.section_number} (Page {c.page_number})</span>'
-                        for c in response.citation_validation.valid_citations
+                        for c in res.citation_validation.valid_citations
                     )
                     st.markdown(citations_html, unsafe_allow_html=True)
 
-                # Retrieved Context Chunks Inspector
-                if response.retrieved_chunks:
-                    st.markdown("---")
-                    with st.expander(f"🔎 Inspect Retrieved Supporting Context ({len(response.retrieved_chunks)} High-Precision Chunks)", expanded=False):
-                        for idx, chunk in enumerate(response.retrieved_chunks, 1):
-                            score_label = f"Cross-Encoder Score: {chunk.rerank_score}" if chunk.rerank_score is not None else f"RRF Score: {chunk.score}"
+                if res.retrieved_chunks:
+                    with st.expander(f"🔎 Inspect Supporting Specification Excerpts ({len(res.retrieved_chunks)} Chunks)", expanded=False):
+                        for idx, chunk in enumerate(res.retrieved_chunks, 1):
+                            score_lbl = f"Cross-Encoder Score: {chunk.rerank_score}" if chunk.rerank_score is not None else f"Score: {chunk.score}"
                             st.markdown(
                                 f"""
                                 <div class="chunk-card">
                                     <div class="chunk-title">Source #{idx}: {chunk.document_code} - Clause {chunk.section_number} ({chunk.section_title})</div>
-                                    <div class="chunk-meta">Hierarchy: {chunk.section_hierarchy} | Page: {chunk.page_number} | {score_label}</div>
+                                    <div class="chunk-meta">Hierarchy: {chunk.section_hierarchy} | Page: {chunk.page_number} | {score_lbl}</div>
                                     <div class="chunk-text">{chunk.text}</div>
                                 </div>
                                 """,
                                 unsafe_allow_html=True,
                             )
+
+            # Store in session state
+            st.session_state["messages"].append({"role": "assistant", "content": res.answer, "response_obj": res})
+            st.rerun()
 
     # -------------------------------------------------------------
     # TAB 2: CLAUSE & PAGE INSPECTOR (SIDE-BY-SIDE PDF AUDIT)
@@ -337,7 +354,7 @@ def main():
 
         col_v1, col_v2, col_v3 = st.columns([1, 1, 1])
         with col_v1:
-            inspect_doc = st.selectbox("Select Specification:", ["3GPP TS 23.501", "3GPP TS 23.502"])
+            inspect_doc = st.selectbox("Select Specification:", ["3GPP TS 23.501", "3GPP TS 23.502"], key="inspect_doc_sel")
         with col_v2:
             clause_search = st.text_input("Clause Number to Inspect:", value="4.2.4", placeholder="e.g. 4.2.4 or 6.2.1")
         with col_v3:
