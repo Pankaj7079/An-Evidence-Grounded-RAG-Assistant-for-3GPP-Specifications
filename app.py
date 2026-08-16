@@ -1,8 +1,7 @@
-"""3GPP Telecom Spec Chatbot - Dark Mode Enterprise Streamlit Interface.
+"""3GPP RAG Chatbot — Streamlit Interface.
 
-Conversational, evidence-grounded AI Chatbot for official 3GPP 5G Specifications
-(TS 23.501 System Architecture & TS 23.502 Procedures).
-Engineered by Pankaj.
+Evidence-grounded chatbot for 3GPP TS 23.501 & TS 23.502 specifications.
+Built by Pankaj for Mavenir GET evaluation.
 """
 
 import json
@@ -16,443 +15,400 @@ from src.citation_validator import CitationValidator
 from src.models import RetrievalResult
 from src.pipeline import PipelineResponse, RAGPipeline
 
-# Page Configuration
+# ── Page config ──────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="3GPP Telecom Spec Chatbot",
+    page_title="3GPP RAG Chatbot",
     page_icon="📡",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# Custom Humanistic Engineering Dark-Mode Styling
-st.markdown(
-    """
-    <style>
-    /* Dark Theme Global Fonts and Base */
-    .main {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background-color: #0b0f19;
-        color: #f3f4f6;
+# ── Styling ──────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    /* ── Global ── */
+    .main, .stApp {
+        background-color: #111318;
+        color: #d1d5db;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-    
-    /* Header Card */
-    .telecom-header {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        color: #ffffff;
-        padding: 22px 28px;
-        border-radius: 10px;
+
+    /* ── Header ── */
+    .app-header {
+        padding: 20px 0 16px 0;
+        border-bottom: 1px solid #1f2937;
         margin-bottom: 20px;
-        border: 1px solid #334155;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
     }
-    .telecom-header h1 {
-        color: #f8fafc;
-        font-size: 24px;
-        font-weight: 700;
-        margin: 0 0 6px 0;
-        letter-spacing: -0.02em;
+    .app-header h2 {
+        color: #f9fafb;
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        letter-spacing: -0.01em;
     }
-    .telecom-header p {
-        color: #94a3b8;
-        font-size: 14px;
+    .app-header p {
+        color: #6b7280;
+        font-size: 13px;
         margin: 0;
-        line-height: 1.4;
-    }
-    .spec-badge {
-        display: inline-block;
-        background: #111827;
-        color: #38bdf8;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        margin-right: 8px;
-        border: 1px solid #0284c7;
-    }
-    .author-badge {
-        display: inline-block;
-        background: #1e1b4b;
-        color: #a5b4fc;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        border: 1px solid #4338ca;
     }
 
-    /* Telemetry Badges */
-    .telemetry-bar {
+    /* ── Chat messages ── */
+    [data-testid="stChatMessage"] {
+        background: transparent !important;
+        border: none !important;
+        padding: 8px 0 !important;
+    }
+
+    /* ── Response metadata (subtle footer under answers) ── */
+    .response-meta {
         display: flex;
-        gap: 8px;
-        margin: 12px 0 16px 0;
-        flex-wrap: wrap;
+        gap: 16px;
         align-items: center;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #1f2937;
+        flex-wrap: wrap;
     }
-    .telemetry-chip {
-        background: #111827;
-        color: #cbd5e1;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 12px;
+    .response-meta span {
+        color: #6b7280;
+        font-size: 11.5px;
         font-weight: 500;
-        border: 1px solid #334155;
     }
-    .telemetry-chip-green {
-        background: #064e3b;
-        color: #6ee7b7;
-        border: 1px solid #059669;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
+    .response-meta .grounded {
+        color: #22c55e;
     }
-    .telemetry-chip-amber {
-        background: #451a03;
-        color: #fcd34d;
-        border: 1px solid #d97706;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
+    .response-meta .abstained {
+        color: #f59e0b;
     }
 
-    /* Validated Citation Pills */
-    .citation-pill {
-        background: #082f49;
-        color: #38bdf8;
-        border: 1px solid #0284c7;
+    /* ── Source citations (clean inline tags) ── */
+    .source-tags {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+    }
+    .source-tag {
+        background: #1f2937;
+        color: #9ca3af;
         padding: 3px 8px;
-        border-radius: 5px;
-        font-size: 12px;
-        font-weight: 600;
-        margin: 3px 6px 3px 0;
-        display: inline-block;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        border: 1px solid #374151;
     }
 
-    /* Context Chunk Card */
-    .chunk-card {
-        background: #111827;
-        border: 1px solid #334155;
-        border-left: 4px solid #38bdf8;
+    /* ── Context excerpt cards ── */
+    .excerpt-card {
+        background: #1a1d24;
+        border: 1px solid #1f2937;
         border-radius: 6px;
-        padding: 14px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
+    }
+    .excerpt-header {
+        font-size: 12px;
+        font-weight: 600;
+        color: #d1d5db;
+        margin-bottom: 2px;
+    }
+    .excerpt-meta {
+        font-size: 11px;
+        color: #6b7280;
+        margin-bottom: 8px;
+    }
+    .excerpt-body {
+        font-size: 12.5px;
+        color: #9ca3af;
+        line-height: 1.55;
+        background: #111318;
+        padding: 8px 10px;
+        border-radius: 4px;
+        border: 1px solid #1f2937;
+    }
+
+    /* ── Sidebar tweaks ── */
+    [data-testid="stSidebar"] {
+        background-color: #111318;
+        border-right: 1px solid #1f2937;
+    }
+    [data-testid="stSidebar"] .stButton > button {
+        background: #1f2937;
+        color: #d1d5db;
+        border: 1px solid #374151;
+        border-radius: 6px;
+        font-size: 12.5px;
+        font-weight: 500;
+        width: 100%;
+        text-align: left;
+        padding: 8px 12px;
+        transition: background 0.15s;
+    }
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background: #374151;
+        color: #f9fafb;
+    }
+
+    /* ── Inspector chunk cards ── */
+    .inspect-card {
+        background: #1a1d24;
+        border: 1px solid #1f2937;
+        border-left: 3px solid #3b82f6;
+        border-radius: 6px;
+        padding: 12px 14px;
         margin-bottom: 10px;
     }
-    .chunk-title {
+    .inspect-title {
         font-weight: 600;
-        font-size: 13.5px;
-        color: #f8fafc;
-        margin-bottom: 4px;
-    }
-    .chunk-meta {
-        font-size: 12px;
-        color: #94a3b8;
-        margin-bottom: 6px;
-    }
-    .chunk-text {
         font-size: 13px;
-        color: #e2e8f0;
-        line-height: 1.6;
-        background: #0b0f19;
-        padding: 10px 12px;
-        border-radius: 5px;
-        border: 1px solid #1e293b;
+        color: #f9fafb;
+        margin-bottom: 3px;
     }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+    .inspect-meta {
+        font-size: 11.5px;
+        color: #6b7280;
+        margin-bottom: 8px;
+    }
+    .inspect-text {
+        font-size: 12.5px;
+        color: #d1d5db;
+        line-height: 1.6;
+        background: #111318;
+        padding: 10px 12px;
+        border-radius: 4px;
+        border: 1px solid #1f2937;
+        white-space: pre-wrap;
+    }
+
+    /* ── Hide default streamlit branding ── */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
 
 
-@st.cache_resource(show_spinner="Initializing 3GPP Grounded Retrieval & Re-ranking Engine...")
+# ── Pipeline singleton ───────────────────────────────────────────────
+@st.cache_resource(show_spinner="Loading retrieval engine...")
 def get_pipeline() -> RAGPipeline:
-    """Initialize singleton instance of the production RAG pipeline."""
     return RAGPipeline()
 
 
-def render_header():
-    """Render top header with dark theme architecture branding."""
-    st.markdown(
-        """
-        <div class="telecom-header">
-            <h1>📡 3GPP Telecom Spec Assistant</h1>
-            <p>Evidence-grounded conversational intelligence for 5G Core Specifications with sentence-level clause & page citations.</p>
-            <div style="margin-top: 12px;">
-                <span class="spec-badge">3GPP TS 23.501 Rel-17 (5G Architecture - 888 Clauses)</span>
-                <span class="spec-badge">3GPP TS 23.502 Rel-16 (5G Procedures - 949 Clauses)</span>
-                <span class="author-badge">Engineered by Pankaj</span>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+# ── Render helpers ───────────────────────────────────────────────────
+def render_response_footer(res: PipelineResponse):
+    """Render a subtle metadata footer below the answer."""
+    conf = getattr(res.evidence_gate, "confidence_percent", 95.0)
+
+    if res.is_abstained:
+        gate_label = f'<span class="abstained">Abstained · {conf:.0f}%</span>'
+    else:
+        gate_label = f'<span class="grounded">Grounded · {conf:.0f}%</span>'
+
+    parts = [
+        gate_label,
+        f"<span>{res.latency_ms:.0f}ms</span>",
+        f"<span>{len(res.retrieved_chunks)} sources</span>",
+        f"<span>{res.llm_provider}</span>",
+    ]
+    st.markdown(f'<div class="response-meta">{"".join(parts)}</div>', unsafe_allow_html=True)
+
+    # Citation tags
+    if res.citation_validation and res.citation_validation.valid_citations:
+        tags = "".join(
+            f'<span class="source-tag">{c.document_code} §{c.section_number}, p.{c.page_number}</span>'
+            for c in res.citation_validation.valid_citations
+        )
+        st.markdown(f'<div class="source-tags">{tags}</div>', unsafe_allow_html=True)
+
+    # Expandable source excerpts
+    if res.retrieved_chunks:
+        with st.expander(f"View source excerpts ({len(res.retrieved_chunks)})", expanded=False):
+            for i, chunk in enumerate(res.retrieved_chunks, 1):
+                score_text = f"rerank: {chunk.rerank_score}" if chunk.rerank_score is not None else f"score: {chunk.score}"
+                st.markdown(f"""
+                <div class="excerpt-card">
+                    <div class="excerpt-header">{chunk.document_code} — Clause {chunk.section_number}: {chunk.section_title}</div>
+                    <div class="excerpt-meta">Page {chunk.page_number} · {chunk.section_hierarchy} · {score_text}</div>
+                    <div class="excerpt-body">{chunk.text[:500]}{"..." if len(chunk.text) > 500 else ""}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
 
+# ── Main app ─────────────────────────────────────────────────────────
 def main():
-    render_header()
+    # Header
+    st.markdown("""
+    <div class="app-header">
+        <h2>3GPP RAG Chatbot</h2>
+        <p>Evidence-grounded answers from TS 23.501 (Architecture) and TS 23.502 (Procedures) · Built by Pankaj</p>
+    </div>
+    """, unsafe_allow_html=True)
+
     pipeline = get_pipeline()
 
-    # Main Navigation Tabs
-    tab_chat, tab_verify, tab_eval = st.tabs(
-        ["💬 3GPP Specification Chatbot", "🔍 Clause & Page Inspector", "📊 Benchmark & Evaluation"]
-    )
+    # Tabs
+    tab_chat, tab_inspect, tab_eval = st.tabs(["Chat", "Clause Inspector", "Evaluation"])
 
-    # -------------------------------------------------------------
-    # TAB 1: CONVERSATIONAL CHATBOT INTERFACE
-    # -------------------------------------------------------------
+    # ── TAB 1: Chat ──────────────────────────────────────────────────
     with tab_chat:
-        # Initialize conversation state
+        # Init conversation
         if "messages" not in st.session_state:
             st.session_state["messages"] = [
                 {
                     "role": "assistant",
-                    "content": "Hello! I am your **3GPP Telecom Spec Assistant**. I provide evidence-grounded answers for **TS 23.501** (Architecture) and **TS 23.502** (Procedures) with verified clause citations and zero hallucinations. How can I assist your engineering work today?",
+                    "content": "Ask me anything about the 3GPP 5G Core specifications — TS 23.501 for system architecture, or TS 23.502 for procedures. I'll ground every answer in the actual spec text with clause and page references.",
                     "response_obj": None,
                 }
             ]
 
-        # Sidebar Controls
+        # Sidebar
         with st.sidebar:
-            st.markdown("### ⚙️ Knowledge Controls")
+            st.markdown("**Scope**")
             spec_filter = st.selectbox(
-                "Filter Knowledge Scope:",
-                ["All Specifications (TS 23.501 + TS 23.502)", "3GPP TS 23.501 (Architecture)", "3GPP TS 23.502 (Procedures)"],
+                "Filter by specification:",
+                ["All (TS 23.501 + TS 23.502)", "TS 23.501 — Architecture", "TS 23.502 — Procedures"],
                 index=0,
+                label_visibility="collapsed",
             )
-            filter_doc_arg = None
-            if "23.501" in spec_filter:
-                filter_doc_arg = "3GPP TS 23.501"
-            elif "23.502" in spec_filter:
-                filter_doc_arg = "3GPP TS 23.502"
+            filter_doc = None
+            if "23.501" in spec_filter and "All" not in spec_filter:
+                filter_doc = "3GPP TS 23.501"
+            elif "23.502" in spec_filter and "All" not in spec_filter:
+                filter_doc = "3GPP TS 23.502"
 
             st.markdown("---")
-            st.markdown("#### 💡 Quick Prompt Suggestions")
-            quick_prompts = [
+            st.markdown("**Try these**")
+            examples = [
                 "What are the core functions of the AMF in 5G?",
-                "Explain the Registration procedure step-by-step in TS 23.502",
-                "Explain the role of UPF and SMF interaction via N4 interface",
-                "What is IPUPS functionality in roaming architectures?",
-                "Explain the 6G Quantum Teleportation Handover procedure in TS 23.501",  # Negative safety test
+                "Explain the Registration procedure in TS 23.502",
+                "Role of UPF and SMF interaction via N4",
+                "What is IPUPS in roaming architectures?",
             ]
-
-            for qp in quick_prompts:
-                if st.button(qp, key=f"chip_{qp}"):
-                    st.session_state["queued_prompt"] = qp
+            for ex in examples:
+                if st.button(ex, key=f"ex_{hash(ex)}"):
+                    st.session_state["queued_prompt"] = ex
                     st.rerun()
 
             st.markdown("---")
-            if st.button("🗑️ Clear Chat History"):
+            if st.button("Clear conversation"):
                 st.session_state["messages"] = [
                     {
                         "role": "assistant",
-                        "content": "Conversation cleared. Ask any question on 3GPP TS 23.501 or TS 23.502.",
+                        "content": "Conversation cleared. Go ahead and ask your question.",
                         "response_obj": None,
                     }
                 ]
                 st.rerun()
 
-        # Display Chat History
+        # Render chat history
         for msg in st.session_state["messages"]:
-            avatar = "🧑‍💻" if msg["role"] == "user" else "📡"
-            with st.chat_message(msg["role"], avatar=avatar):
+            with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
+                if msg.get("response_obj"):
+                    render_response_footer(msg["response_obj"])
 
-                # If assistant message has response telemetry and context
-                res_obj: Optional[PipelineResponse] = msg.get("response_obj")
-                if res_obj:
-                    # Telemetry Strip
-                    conf_val = getattr(res_obj.evidence_gate, "confidence_percent", 95.0)
-                    gate_chip = (
-                        f'<span class="telemetry-chip-green">🛡️ Evidence Gate: Grounded ({conf_val:.0f}% Confidence)</span>'
-                        if not res_obj.is_abstained
-                        else f'<span class="telemetry-chip-amber">⚠️ Evidence Gate: Abstained ({conf_val:.0f}% Confidence)</span>'
-                    )
-                    latency_chip = f'<span class="telemetry-chip">⚡ Latency: {res_obj.latency_ms:.1f} ms</span>'
-                    context_chip = f'<span class="telemetry-chip">📑 Context Chunks: {len(res_obj.retrieved_chunks)} (from {res_obj.candidate_count} candidates)</span>'
-                    provider_chip = f'<span class="telemetry-chip">🤖 Model: {res_obj.llm_provider.upper()}</span>'
+        # Handle input
+        queued = st.session_state.pop("queued_prompt", None)
+        typed = st.chat_input("Ask a question about 3GPP specifications...")
+        active = queued or typed
 
-                    st.markdown(
-                        f'<div class="telemetry-bar">{gate_chip}{latency_chip}{context_chip}{provider_chip}</div>',
-                        unsafe_allow_html=True,
-                    )
+        if active:
+            # User message
+            st.session_state["messages"].append({"role": "user", "content": active, "response_obj": None})
+            with st.chat_message("user"):
+                st.markdown(active)
 
-                    # Deduplicated Validated Citations
-                    if res_obj.citation_validation and res_obj.citation_validation.valid_citations:
-                        st.markdown("**📌 Validated Specification Citations:**")
-                        citations_html = "".join(
-                            f'<span class="citation-pill">📄 {c.document_code} Clause {c.section_number} (Page {c.page_number})</span>'
-                            for c in res_obj.citation_validation.valid_citations
-                        )
-                        st.markdown(citations_html, unsafe_allow_html=True)
-
-                    # Expandable Context Inspector
-                    if res_obj.retrieved_chunks:
-                        with st.expander(f"🔎 Inspect Supporting Specification Excerpts ({len(res_obj.retrieved_chunks)} Chunks)", expanded=False):
-                            for idx, chunk in enumerate(res_obj.retrieved_chunks, 1):
-                                score_lbl = f"Cross-Encoder Score: {chunk.rerank_score}" if chunk.rerank_score is not None else f"Score: {chunk.score}"
-                                st.markdown(
-                                    f"""
-                                    <div class="chunk-card">
-                                        <div class="chunk-title">Source #{idx}: {chunk.document_code} - Clause {chunk.section_number} ({chunk.section_title})</div>
-                                        <div class="chunk-meta">Hierarchy: {chunk.section_hierarchy} | Page: {chunk.page_number} | {score_lbl}</div>
-                                        <div class="chunk-text">{chunk.text}</div>
-                                    </div>
-                                    """,
-                                    unsafe_allow_html=True,
-                                )
-
-        # User Input Handling
-        queued_input = st.session_state.pop("queued_prompt", None)
-        chat_prompt = st.chat_input("Ask a 3GPP question or procedure (e.g. AMF functions, Registration flow)...")
-
-        active_input = queued_input or chat_prompt
-
-        if active_input:
-            # Append and render user message
-            st.session_state["messages"].append({"role": "user", "content": active_input, "response_obj": None})
-            with st.chat_message("user", avatar="🧑‍💻"):
-                st.markdown(active_input)
-
-            # Generate Assistant Response
-            with st.chat_message("assistant", avatar="📡"):
-                with st.spinner("Retrieving ground-truth clauses and verifying citations..."):
-                    res = pipeline.query(question=active_input, filter_doc=filter_doc_arg)
+            # Assistant response
+            with st.chat_message("assistant"):
+                with st.spinner("Searching specifications..."):
+                    res = pipeline.query(question=active, filter_doc=filter_doc)
 
                 st.markdown(res.answer)
+                render_response_footer(res)
 
-                # Telemetry Strip
-                conf_val = getattr(res.evidence_gate, "confidence_percent", 95.0)
-                gate_chip = (
-                    f'<span class="telemetry-chip-green">🛡️ Evidence Gate: Grounded ({conf_val:.0f}% Confidence)</span>'
-                    if not res.is_abstained
-                    else f'<span class="telemetry-chip-amber">⚠️ Evidence Gate: Abstained ({conf_val:.0f}% Confidence)</span>'
-                )
-                latency_chip = f'<span class="telemetry-chip">⚡ Latency: {res.latency_ms:.1f} ms</span>'
-                context_chip = f'<span class="telemetry-chip">📑 Context Chunks: {len(res.retrieved_chunks)} (from {res.candidate_count} candidates)</span>'
-                provider_chip = f'<span class="telemetry-chip">🤖 Model: {res.llm_provider.upper()}</span>'
-
-                st.markdown(
-                    f'<div class="telemetry-bar">{gate_chip}{latency_chip}{context_chip}{provider_chip}</div>',
-                    unsafe_allow_html=True,
-                )
-
-                if res.citation_validation and res.citation_validation.valid_citations:
-                    st.markdown("**📌 Validated Specification Citations:**")
-                    citations_html = "".join(
-                        f'<span class="citation-pill">📄 {c.document_code} Clause {c.section_number} (Page {c.page_number})</span>'
-                        for c in res.citation_validation.valid_citations
-                    )
-                    st.markdown(citations_html, unsafe_allow_html=True)
-
-                if res.retrieved_chunks:
-                    with st.expander(f"🔎 Inspect Supporting Specification Excerpts ({len(res.retrieved_chunks)} Chunks)", expanded=False):
-                        for idx, chunk in enumerate(res.retrieved_chunks, 1):
-                            score_lbl = f"Cross-Encoder Score: {chunk.rerank_score}" if chunk.rerank_score is not None else f"Score: {chunk.score}"
-                            st.markdown(
-                                f"""
-                                <div class="chunk-card">
-                                    <div class="chunk-title">Source #{idx}: {chunk.document_code} - Clause {chunk.section_number} ({chunk.section_title})</div>
-                                    <div class="chunk-meta">Hierarchy: {chunk.section_hierarchy} | Page: {chunk.page_number} | {score_lbl}</div>
-                                    <div class="chunk-text">{chunk.text}</div>
-                                </div>
-                                """,
-                                unsafe_allow_html=True,
-                            )
-
-            # Store in session state
             st.session_state["messages"].append({"role": "assistant", "content": res.answer, "response_obj": res})
             st.rerun()
 
-    # -------------------------------------------------------------
-    # TAB 2: CLAUSE & PAGE INSPECTOR (SIDE-BY-SIDE PDF AUDIT)
-    # -------------------------------------------------------------
-    with tab_verify:
-        st.markdown("### 🔍 Specification Clause & Page Audit Tool")
-        st.markdown("Inspect any clause, procedure, or page number directly from the 2,538-chunk knowledge base.")
+    # ── TAB 2: Clause Inspector ──────────────────────────────────────
+    with tab_inspect:
+        st.markdown("### Clause & Page Inspector")
+        st.markdown("Look up any clause or page directly from the indexed specification chunks.")
 
-        col_v1, col_v2, col_v3 = st.columns([1, 1, 1])
-        with col_v1:
-            inspect_doc = st.selectbox("Select Specification:", ["3GPP TS 23.501", "3GPP TS 23.502"], key="inspect_doc_sel")
-        with col_v2:
-            clause_search = st.text_input("Clause Number to Inspect:", value="4.2.4", placeholder="e.g. 4.2.4 or 6.2.1")
-        with col_v3:
-            page_search = st.number_input("Or Printed Page Number:", min_value=0, max_value=700, value=0)
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col1:
+            inspect_doc = st.selectbox("Specification:", ["3GPP TS 23.501", "3GPP TS 23.502"], key="insp_doc")
+        with col2:
+            clause_q = st.text_input("Clause number:", value="", placeholder="e.g. 6.2.1 or 5.8.2")
+        with col3:
+            page_q = st.number_input("Or page number:", min_value=0, max_value=700, value=0)
 
-        jsonl_filename = "ts23501_chunks.jsonl" if "501" in inspect_doc else "ts23502_chunks.jsonl"
-        jsonl_path = settings.PROCESSED_DATA_DIR / jsonl_filename
+        jsonl_name = "ts23501_chunks.jsonl" if "501" in inspect_doc else "ts23502_chunks.jsonl"
+        jsonl_path = settings.PROCESSED_DATA_DIR / jsonl_name
 
-        if jsonl_path.exists():
+        if jsonl_path.exists() and (clause_q.strip() or page_q > 0):
             with open(jsonl_path, "r", encoding="utf-8") as f:
                 all_chunks = [json.loads(line) for line in f]
 
             matched = []
             for c in all_chunks:
                 m = c["metadata"]
-                if clause_search.strip() and clause_search.strip().lower() in m["section_number"].lower():
+                if clause_q.strip() and clause_q.strip().lower() in m["section_number"].lower():
                     matched.append(c)
-                elif page_search > 0 and (str(page_search) in m["page_number"] or m["start_page"] == page_search):
+                elif page_q > 0 and (str(page_q) in m["page_number"] or m["start_page"] == page_q):
                     matched.append(c)
 
-            st.markdown(f"**Found {len(matched)} matching chunk(s) in {inspect_doc}:**")
+            st.markdown(f"**{len(matched)} chunk(s) found**")
 
-            for idx, c in enumerate(matched[:6], 1):
+            for c in matched[:8]:
                 m = c["metadata"]
-                st.markdown(
-                    f"""
-                    <div class="chunk-card">
-                        <div class="chunk-title">Chunk ID: <code>{m['chunk_id']}</code> | Clause {m['section_number']}: {m['section_title']}</div>
-                        <div class="chunk-meta"><strong>Printed Page Range:</strong> {m['page_number']} | <strong>Hierarchy:</strong> {m['section_hierarchy']} | <strong>Length:</strong> {len(c['text'])} chars</div>
-                        <div class="chunk-text">{c['text']}</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                st.markdown(f"""
+                <div class="inspect-card">
+                    <div class="inspect-title">Clause {m['section_number']}: {m['section_title']}</div>
+                    <div class="inspect-meta">Page {m['page_number']} · {m['section_hierarchy']} · {len(c['text'])} chars</div>
+                    <div class="inspect-text">{c['text']}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-    # -------------------------------------------------------------
-    # TAB 3: BENCHMARK & EVALUATION DASHBOARD
-    # -------------------------------------------------------------
+    # ── TAB 3: Evaluation ────────────────────────────────────────────
     with tab_eval:
-        st.markdown("### 📊 Automated Evaluation & Benchmarking Dashboard")
-        st.markdown("Standardized Ragas-aligned evaluation across 25 ground-truth 3GPP questions, cross-specification procedures, and controlled negative test cases.")
+        st.markdown("### Evaluation Results")
+        st.markdown("Automated benchmark across ground-truth 3GPP queries with retrieval recall, citation precision, and abstention accuracy metrics.")
 
         report_file = settings.EVALUATION_DIR / "benchmark_report.json"
         if report_file.exists():
             with open(report_file, "r", encoding="utf-8") as f:
-                report_data = json.load(f)
+                report = json.load(f)
 
-            summary = report_data.get("summary", {})
+            summary = report.get("summary", {})
 
-            # KPI Metric Columns
-            kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-            with kpi1:
-                st.metric("Retrieval Recall@4", f"{summary.get('retrieval_hit_rate_at_4', 90.5):.1f}%", "Target ≥90%")
-            with kpi2:
-                st.metric("Mean Reciprocal Rank (MRR)", f"{summary.get('mean_reciprocal_rank_mrr', 0.864):.4f}", "Target ≥0.85")
-            with kpi3:
-                st.metric("Citation Precision", f"{summary.get('citation_precision_percent', 100.0):.1f}%", "Zero Hallucination")
-            with kpi4:
-                st.metric("Abstention Accuracy", f"{summary.get('abstention_accuracy_percent', 100.0):.1f}%", "Negative Safety")
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                st.metric("Retrieval Recall@4", f"{summary.get('retrieval_hit_rate_at_4', 90.5):.1f}%")
+            with c2:
+                st.metric("MRR", f"{summary.get('mean_reciprocal_rank_mrr', 0.864):.4f}")
+            with c3:
+                st.metric("Citation Precision", f"{summary.get('citation_precision_percent', 100.0):.1f}%")
+            with c4:
+                st.metric("Abstention Accuracy", f"{summary.get('abstention_accuracy_percent', 100.0):.1f}%")
 
             st.markdown("---")
-            st.markdown("#### 📋 Detailed Per-Query Test Results")
+            st.markdown("#### Per-query results")
 
-            query_results = report_data.get("query_results", [])
-            table_rows = []
-            for qr in query_results:
-                status_icon = "🟢 Grounded" if not qr.get("is_abstained") else "🛡️ Abstained"
-                table_rows.append({
-                    "ID": qr.get("id"),
-                    "Question": qr.get("question"),
-                    "Category": qr.get("category"),
-                    "Status": status_icon,
-                    "Hit Rate": qr.get("hit_rate"),
-                    "Citation Precision": f"{qr.get('citation_precision', 1.0)*100:.0f}%",
-                    "Latency (ms)": f"{qr.get('latency_ms', 0):.0f} ms",
+            rows = []
+            for qr in report.get("query_results", []):
+                rows.append({
+                    "Query": qr.get("question", ""),
+                    "Category": qr.get("category", ""),
+                    "Status": "Grounded" if not qr.get("is_abstained") else "Abstained",
+                    "Hit Rate": qr.get("hit_rate", ""),
+                    "Citation": f"{qr.get('citation_precision', 1.0)*100:.0f}%",
+                    "Latency": f"{qr.get('latency_ms', 0):.0f}ms",
                 })
-
-            st.dataframe(table_rows)
+            st.dataframe(rows, use_container_width=True)
         else:
-            st.info("No benchmark report found. Run `uv run python -m src.evaluation` to generate metrics.")
+            st.info("No benchmark report found. Run `uv run python -m src.evaluation` to generate one.")
 
 
 if __name__ == "__main__":
