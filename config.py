@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     STORAGE_DIR: Path = BASE_DIR / "storage"
     QDRANT_PATH: Path = STORAGE_DIR / "qdrant"
 
-    # LLM Settings
+    # LLM Settings (Groq default for sub-second inference)
     LLM_PROVIDER: Literal["groq", "gemini"] = "groq"
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-flash-latest"
