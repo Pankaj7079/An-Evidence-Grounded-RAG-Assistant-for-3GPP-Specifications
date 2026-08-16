@@ -179,6 +179,7 @@ class Evaluator:
             logger.info(f"[{idx}/{len(questions)}] Evaluating: '{q.question[:60]}...'")
             q_res = self.evaluate_query(q)
             results.append(q_res)
+            time.sleep(1.2)  # Gentle pacing to respect API rate limits
 
         # Aggregate Metrics
         total = len(results)

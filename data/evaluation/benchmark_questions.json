@@ -31,8 +31,8 @@
     "question": "What is the role and functionality of the Policy Control Function (PCF) in 5GS?",
     "category": "architecture",
     "expected_document": "3GPP TS 23.501",
-    "expected_clause": "6.2.7",
-    "expected_page": "429-430",
+    "expected_clause": "6.2.4",
+    "expected_page": "427",
     "should_abstain": false
   },
   {
@@ -40,8 +40,8 @@
     "question": "Describe the functions of Unified Data Management (UDM).",
     "category": "architecture",
     "expected_document": "3GPP TS 23.501",
-    "expected_clause": "6.2.4",
-    "expected_page": "427-428",
+    "expected_clause": "6.2.7",
+    "expected_page": "431-432",
     "should_abstain": false
   },
   {
@@ -49,8 +49,8 @@
     "question": "What is the purpose of the Authentication Server Function (AUSF)?",
     "category": "architecture",
     "expected_document": "3GPP TS 23.501",
-    "expected_clause": "6.2.5",
-    "expected_page": "428",
+    "expected_clause": "6.2.8",
+    "expected_page": "432",
     "should_abstain": false
   },
   {
@@ -111,9 +111,9 @@
     "id": "bench_013",
     "question": "What are the different types of Registration procedures supported in 5GS (Initial, Mobility, Periodic)?",
     "category": "procedure",
-    "expected_document": "3GPP TS 23.501",
-    "expected_clause": "5.3.2.1",
-    "expected_page": "82",
+    "expected_document": "3GPP TS 23.502",
+    "expected_clause": "4.2.2.2",
+    "expected_page": "25",
     "should_abstain": false
   },
   {
@@ -184,8 +184,8 @@
     "question": "How are QoS rules and profiles signaled between SMF, UPF, and (R)AN?",
     "category": "cross_spec",
     "expected_document": "3GPP TS 23.501",
-    "expected_clause": "5.7.1",
-    "expected_page": "194",
+    "expected_clause": "5.7.2",
+    "expected_page": "161-163",
     "should_abstain": false
   },
   {

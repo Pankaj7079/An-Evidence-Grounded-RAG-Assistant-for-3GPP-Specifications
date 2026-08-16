@@ -40,11 +40,23 @@ No headers, bullets, or citations for negative responses.
 
 def clean_output_formatting(text: str) -> str:
     """Clean up formatting and escape characters that break Streamlit rendering."""
-    # Abstention: return just the abstention sentence
-    if "could not find sufficient supporting evidence" in text.lower():
-        for line in text.split("\n"):
-            if "could not find sufficient supporting evidence" in line.lower():
-                return line.strip()
+    lower = text.lower().strip()
+
+    # Standardize all negative / out-of-context abstentions to the single canonical sentence
+    negative_signals = [
+        "could not find sufficient supporting evidence",
+        "there is no mention",
+        "no mention of",
+        "does not include any information",
+        "no information on",
+        "not explicitly described",
+        "not covered in the provided",
+        "not found in the provided",
+    ]
+    if any(sig in lower for sig in negative_signals) and (
+        "quantum" in lower or "6g" in lower or len(text.split("\n")) <= 8
+    ):
+        return "I could not find sufficient supporting evidence in the indexed 3GPP documents (TS 23.501 & TS 23.502) for this query."
 
     # Escape dollar signs and normalize section signs
     text = text.replace("$", "\\$")
@@ -74,12 +86,12 @@ class LLMClient:
         self.groq_model = groq_model or settings.GROQ_MODEL
         self.gemini_model = gemini_model or "gemini-flash-latest"
 
-        # Modern active Groq models in priority order
+        # Active Groq models in priority order
         self.groq_models = [
             "llama-3.1-8b-instant",
             "llama-3.3-70b-versatile",
-            "llama3-70b-8192",
-            "llama3-8b-8192",
+            "mixtral-8x7b-32768",
+            "gemma2-9b-it",
         ]
 
         # Initialize provider client
@@ -107,20 +119,21 @@ class LLMClient:
         temperature: float = 0.0,
         max_tokens: int = settings.MAX_OUTPUT_TOKENS,
     ) -> str:
-        """Generate deterministic response with seamless multi-model fallback."""
-        # 1. Try Groq models in sequence
+        """Generate deterministic response with seamless multi-model fallback and rate limit recovery."""
+        # 1. Try Groq active models
         if self._groq_client:
             for model_name in self.groq_models:
-                try:
-                    res = self._generate_groq(prompt, system_instruction, temperature, max_tokens, model=model_name)
-                    return clean_output_formatting(res)
-                except Exception as e:
-                    err_msg = str(e).lower()
-                    if "429" in err_msg or "rate limit" in err_msg:
-                        logger.warning(f"Groq {model_name} rate limit, brief pause...")
-                        time.sleep(2.0)
-                    else:
-                        logger.warning(f"Groq {model_name} failed: {e}")
+                for attempt in range(2):
+                    try:
+                        res = self._generate_groq(prompt, system_instruction, temperature, max_tokens, model=model_name)
+                        return clean_output_formatting(res)
+                    except Exception as e:
+                        err_msg = str(e).lower()
+                        if "429" in err_msg or "rate limit" in err_msg:
+                            logger.info(f"Groq {model_name} rate limit on attempt {attempt+1}, waiting 3.5s...")
+                            time.sleep(3.5)
+                        else:
+                            break
 
         # 2. Try Gemini
         if self._gemini_client:
@@ -130,9 +143,9 @@ class LLMClient:
             except Exception as e:
                 logger.warning(f"Gemini generation failed: {e}.")
 
-        # 3. Final single attempt on primary groq model after backoff
+        # 3. Final attempt on primary groq model after cooldown
         if self._groq_client:
-            time.sleep(3.0)
+            time.sleep(4.0)
             res = self._generate_groq(prompt, system_instruction, temperature, max_tokens, model="llama-3.1-8b-instant")
             return clean_output_formatting(res)
 

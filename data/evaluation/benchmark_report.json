@@ -1,19 +1,19 @@
 {
-  "timestamp": "2026-08-15T19:41:42Z",
+  "timestamp": "2026-08-16T19:59:13Z",
   "summary": {
     "total_queries": 25,
     "positive_queries": 21,
     "negative_queries": 4,
-    "retrieval_hit_rate_at_4": 76.19,
-    "mean_reciprocal_rank_mrr": 0.5913,
-    "citation_precision_percent": 100.0,
-    "faithfulness_grounding_percent": 100.0,
-    "abstention_accuracy_percent": 75.0,
+    "retrieval_hit_rate_at_4": 100.0,
+    "mean_reciprocal_rank_mrr": 0.7778,
+    "citation_precision_percent": 98.81,
+    "faithfulness_grounding_percent": 95.24,
+    "abstention_accuracy_percent": 100.0,
     "answer_relevancy_percent": 100.0,
-    "p50_latency_ms": 9611.01,
-    "p90_latency_ms": 14333.74,
-    "avg_latency_ms": 9085.86,
-    "llm_provider": "gemini"
+    "p50_latency_ms": 7809.39,
+    "p90_latency_ms": 24558.77,
+    "avg_latency_ms": 12296.94,
+    "llm_provider": "groq"
   },
   "query_results": [
     {
@@ -28,7 +28,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 8646.43,
+      "latency_ms": 4673.84,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 4.2.2",
         "3GPP TS 23.501 Clause 6.2.1",
@@ -37,32 +37,7 @@
       ],
       "generated_citations": [
         "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.502 Clause 4.2.1, Page 24]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.502 Clause 4.2.1, Page 24]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.502 Clause 4.2.1, Page 24]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]",
-        "[TS 23.501 Clause 6.2.1, Page 423-424]"
+        "[TS 23.502 Clause 4.2.1, Page 24]"
       ]
     },
     {
@@ -77,7 +52,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 10850.63,
+      "latency_ms": 4127.11,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 6.2.2",
         "3GPP TS 23.502 Clause 4.4.1.1",
@@ -87,27 +62,7 @@
       "generated_citations": [
         "[TS 23.501 Clause 6.2.2, Page 424-425]",
         "[TS 23.502 Clause 4.4.1.1, Page 153]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 5.8.2.11.1, Page 186-187]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]",
-        "[TS 23.501 Clause 6.2.2, Page 424-425]"
+        "[TS 23.502 Clause 4.4.2.2, Page 156]"
       ]
     },
     {
@@ -122,7 +77,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 10995.66,
+      "latency_ms": 3816.18,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 6.2.3",
         "3GPP TS 23.501 Clause 5.8.2.14",
@@ -131,29 +86,7 @@
       ],
       "generated_citations": [
         "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 5.8.2.14, Page 209]",
-        "[TS 23.501 Clause 6.2.3, Page 426]",
-        "[TS 23.501 Clause 4.2.10, Page 61]",
-        "[TS 23.501 Clause 4.2.10, Page 61]",
-        "[TS 23.501 Clause 6.2.3, Page 426]"
+        "[TS 23.501 Clause 5.8.2.14, Page 209]"
       ]
     },
     {
@@ -163,12 +96,12 @@
       "should_abstain": false,
       "is_abstained": false,
       "abstention_correct": true,
-      "hit_rate": 0.0,
-      "reciprocal_rank": 0.0,
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 10405.42,
+      "latency_ms": 3305.68,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 6.2.4",
         "3GPP TS 23.501 Clause 5.14",
@@ -177,10 +110,6 @@
       ],
       "generated_citations": [
         "[TS 23.501 Clause 6.2.4, Page 427]",
-        "[TS 23.501 Clause 6.2.4, Page 427]",
-        "[TS 23.501 Clause 6.2.4, Page 427]",
-        "[TS 23.502 Clause 5.2.2.2.2, Page 466]",
-        "[TS 23.502 Clause 5.2.2.2.2, Page 466]",
         "[TS 23.502 Clause 4.16.2.2, Page 339]"
       ]
     },
@@ -191,12 +120,12 @@
       "should_abstain": false,
       "is_abstained": false,
       "abstention_correct": true,
-      "hit_rate": 0.0,
-      "reciprocal_rank": 0.0,
+      "hit_rate": 1.0,
+      "reciprocal_rank": 0.5,
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 8803.85,
+      "latency_ms": 7195.78,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 6.2.11",
         "3GPP TS 23.501 Clause 6.2.7",
@@ -204,21 +133,6 @@
         "3GPP TS 23.501 Clause 4.2.2"
       ],
       "generated_citations": [
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
-        "[TS 23.501 Clause 6.2.7, Page 431-432]",
         "[TS 23.501 Clause 6.2.7, Page 431-432]"
       ]
     },
@@ -229,12 +143,12 @@
       "should_abstain": false,
       "is_abstained": false,
       "abstention_correct": true,
-      "hit_rate": 0.0,
-      "reciprocal_rank": 0.0,
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 6143.28,
+      "latency_ms": 23275.42,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 6.2.8",
         "3GPP TS 23.502 Clause 5.2.10.2.1",
@@ -244,12 +158,8 @@
       "generated_citations": [
         "[TS 23.501 Clause 4.2.2, Page 35-36]",
         "[TS 23.501 Clause 6.2.8, Page 432]",
-        "[TS 23.501 Clause 6.2.8, Page 432]",
         "[TS 23.501 Clause 7.2.7, Page 483]",
-        "[TS 23.502 Clause 5.2.10.2.1, Page 548]",
-        "[TS 23.501 Clause 7.2.7, Page 483]",
-        "[TS 23.502 Clause 5.2.10.2.1, Page 548]",
-        "[TS 23.501 Clause 7.2.7, Page 483]"
+        "[TS 23.502 Clause 5.2.10.2.1, Page 548]"
       ]
     },
     {
@@ -264,7 +174,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 9625.03,
+      "latency_ms": 7909.08,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 6.2.6.1",
         "3GPP TS 23.501 Clause 6.3.1",
@@ -272,13 +182,9 @@
         "3GPP TS 23.501 Clause 6.3.25"
       ],
       "generated_citations": [
-        "[TS 23.501 Clause 6.2.6.1, Page 428-429]",
-        "[TS 23.501 Clause 6.2.6.1, Page 428-429]",
-        "[TS 23.501 Clause 6.3.1, Page 439]",
         "[TS 23.501 Clause 6.3.1, Page 439]",
         "[TS 23.501 Clause 6.2.6.1, Page 428-429]",
-        "[TS 23.501 Clause 6.3.25, Page 473-474]",
-        "[TS 23.501 Clause 6.3.1, Page 439]"
+        "[TS 23.501 Clause 5.16.3.11, Page 251]"
       ]
     },
     {
@@ -293,7 +199,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 9319.46,
+      "latency_ms": 24810.61,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 5.35.1",
         "3GPP TS 23.501 Clause 5.7.1.1",
@@ -302,30 +208,7 @@
       ],
       "generated_citations": [
         "[TS 23.501 Clause 5.7.1.1, Page 152]",
-        "[TS 23.501 Clause 5.7.1.1, Page 152]",
-        "[TS 23.501 Clause 5.7.1.1, Page 152]",
-        "[TS 23.501 Clause 5.7.1.1, Page 152]",
-        "[TS 23.501 Clause 5.7.1.1, Page 152]",
         "[TS 23.501 Clause 5.7.2.1, Page 158-159]",
-        "[TS 23.501 Clause 5.7.1.1, Page 152]",
-        "[TS 23.501 Clause 5.7.1.1, Page 152]",
-        "[TS 23.501 Clause 5.7.1.1, Page 152]",
-        "[TS 23.501 Clause 5.7.1.1, Page 152]",
-        "[TS 23.501 Clause 5.7.1.1, Page 152]",
-        "[TS 23.501 Clause 5.7.1.1, Page 152]",
-        "[TS 23.501 Clause 5.7.2.1, Page 158-159]",
-        "[TS 23.501 Clause 5.7.2.1, Page 158-159]",
-        "[TS 23.501 Clause 5.7.3.1, Page 164]",
-        "[TS 23.501 Clause 5.7.2.1, Page 158-159]",
-        "[TS 23.501 Clause 5.7.3.1, Page 164]",
-        "[TS 23.501 Clause 5.7.2.1, Page 158-159]",
-        "[TS 23.501 Clause 5.7.3.1, Page 164]",
-        "[TS 23.501 Clause 5.7.3.1, Page 164]",
-        "[TS 23.501 Clause 5.7.3.1, Page 164]",
-        "[TS 23.501 Clause 5.7.3.1, Page 164]",
-        "[TS 23.501 Clause 5.7.3.1, Page 164]",
-        "[TS 23.501 Clause 5.7.3.1, Page 164]",
-        "[TS 23.501 Clause 5.7.3.1, Page 164]",
         "[TS 23.501 Clause 5.7.3.1, Page 164]"
       ]
     },
@@ -341,7 +224,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 6862.39,
+      "latency_ms": 24705.75,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 4.2.4",
         "3GPP TS 23.501 Clause 5.8.2.14",
@@ -349,17 +232,7 @@
         "3GPP TS 23.501 Clause 6.2.17"
       ],
       "generated_citations": [
-        "[TS 23.501 Clause 4.2.4, Page 42-43]",
         "[TS 23.501 Clause 5.8.2.14, Page 209]",
-        "[TS 23.501 Clause 5.8.2.14, Page 209]",
-        "[TS 23.501 Clause 4.2.4, Page 42-43]",
-        "[TS 23.501 Clause 4.2.4, Page 42-43]",
-        "[TS 23.501 Clause 5.8.2.14, Page 209]",
-        "[TS 23.501 Clause 4.2.4, Page 42-43]",
-        "[TS 23.501 Clause 5.8.2.14, Page 209]",
-        "[TS 23.501 Clause 4.2.4, Page 42-43]",
-        "[TS 23.501 Clause 5.8.2.14, Page 209]",
-        "[TS 23.501 Clause 4.2.4, Page 42-43]",
         "[TS 23.501 Clause 4.2.4, Page 43-44]"
       ]
     },
@@ -375,7 +248,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 12392.36,
+      "latency_ms": 5043.16,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 4.2.7",
         "3GPP TS 23.501 Clause 5.11.1",
@@ -384,14 +257,7 @@
       ],
       "generated_citations": [
         "[TS 23.501 Clause 4.2.7, Page 47-48]",
-        "[TS 23.501 Clause 4.2.7, Page 47-48]",
-        "[TS 23.501 Clause 4.2.7, Page 47-48]",
-        "[TS 23.501 Clause 4.2.7, Page 47-48]",
-        "[TS 23.501 Clause 4.2.7, Page 47-48]",
-        "[TS 23.501 Clause 4.2.7, Page 47-48]",
-        "[TS 23.501 Clause 4.2.7, Page 47-48]",
-        "[TS 23.501 Clause 4.2.7, Page 47-48]",
-        "[TS 23.501 Clause 4.2.7, Page 47-48]"
+        "[TS 23.501 Clause 6.2.1, Page 423-424]"
       ]
     },
     {
@@ -406,7 +272,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 11373.76,
+      "latency_ms": 24301.99,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 5.3.2.2.3",
         "3GPP TS 23.501 Clause 5.3.2.2.1",
@@ -415,29 +281,9 @@
       ],
       "generated_citations": [
         "[TS 23.501 Clause 5.3.2.2.1, Page 82-83]",
-        "[TS 23.501 Clause 5.3.2.2.1, Page 82-83]",
-        "[TS 23.501 Clause 5.3.2.2.1, Page 82-83]",
-        "[TS 23.501 Clause 5.3.2.2.2, Page 83]",
-        "[TS 23.501 Clause 5.3.2.2.2, Page 83]",
-        "[TS 23.501 Clause 5.3.2.2.2, Page 83]",
-        "[TS 23.501 Clause 5.3.2.2.2, Page 83]",
-        "[TS 23.501 Clause 5.3.2.2.2, Page 83]",
-        "[TS 23.501 Clause 5.3.2.2.2, Page 83]",
-        "[TS 23.501 Clause 5.3.2.2.2, Page 83]",
-        "[TS 23.501 Clause 5.3.2.2.2, Page 83]",
-        "[TS 23.501 Clause 5.3.2.2.3, Page 83-84]",
-        "[TS 23.501 Clause 5.3.2.2.3, Page 83-84]",
-        "[TS 23.501 Clause 5.3.2.2.3, Page 83-84]",
-        "[TS 23.501 Clause 5.3.2.2.3, Page 83-84]",
-        "[TS 23.501 Clause 5.3.2.2.3, Page 83-84]",
-        "[TS 23.501 Clause 5.3.2.2.3, Page 83-84]",
-        "[TS 23.501 Clause 5.3.2.2.3, Page 83-84]",
-        "[TS 23.501 Clause 5.3.2.2.3, Page 83-84]",
         "[TS 23.501 Clause 5.3.2.2.3, Page 83-84]",
         "[TS 23.501 Clause 5.3.2.2.4, Page 84]",
-        "[TS 23.501 Clause 5.3.2.2.4, Page 84]",
-        "[TS 23.501 Clause 5.3.2.2.4, Page 84]",
-        "[TS 23.501 Clause 5.3.2.2.4, Page 84]"
+        "[TS 23.501 Clause 5.3.2.2.2, Page 83]"
       ]
     },
     {
@@ -449,10 +295,10 @@
       "abstention_correct": true,
       "hit_rate": 1.0,
       "reciprocal_rank": 0.25,
-      "citation_precision": 1.0,
-      "faithfulness_score": 1.0,
+      "citation_precision": 0.75,
+      "faithfulness_score": 0.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 9611.01,
+      "latency_ms": 4031.58,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 5.3.2.1",
         "3GPP TS 23.502 Clause 4.2.2.1",
@@ -460,25 +306,9 @@
         "3GPP TS 23.502 Clause 4.2.2.2.1"
       ],
       "generated_citations": [
+        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
         "[TS 23.502 Clause 4.2.2.1, Page 24]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]"
+        "[TS 23.502 Clause 4.2.2.2.2, Page 25]"
       ]
     },
     {
@@ -488,12 +318,12 @@
       "should_abstain": false,
       "is_abstained": false,
       "abstention_correct": true,
-      "hit_rate": 0.0,
-      "reciprocal_rank": 0.0,
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 5731.1,
+      "latency_ms": 22950.85,
       "retrieved_clauses": [
         "3GPP TS 23.502 Clause 4.2.2.2.1",
         "3GPP TS 23.502 Clause 4.11.2.3",
@@ -501,13 +331,7 @@
         "3GPP TS 23.502 Clause 3.2"
       ],
       "generated_citations": [
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]",
-        "[TS 23.502 Clause 4.11.2.3, Page 239-241]"
+        "[TS 23.502 Clause 4.2.2.2.1, Page 24-25]"
       ]
     },
     {
@@ -522,7 +346,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 5017.64,
+      "latency_ms": 23839.65,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 5.3.2.2.3",
         "3GPP TS 23.501 Clause 5.3.2.2.2",
@@ -530,13 +354,9 @@
         "3GPP TS 23.502 Clause 4.2.2.2.2"
       ],
       "generated_citations": [
-        "[TS 23.501 Clause 5.3.2.2.2, Page 83]",
-        "[TS 23.501 Clause 5.3.2.2.2, Page 83]",
         "[TS 23.501 Clause 5.3.2.2.4, Page 84]",
-        "[TS 23.502 Clause 4.2.2.2.2, Page 37-38]",
-        "[TS 23.501 Clause 5.3.2.2.3, Page 83-84]",
-        "[TS 23.502 Clause 4.2.2, Page not specified]",
-        "[TS 23.501 Clause 5.3.2.2.2, Page 83]"
+        "[TS 23.501 Clause 5.3.2.2.2, Page 83]",
+        "[TS 23.502 Clause 4.2.2.2.2, Page 37-38]"
       ]
     },
     {
@@ -551,7 +371,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 15256.55,
+      "latency_ms": 4038.83,
       "retrieved_clauses": [
         "3GPP TS 23.502 Clause 4.2.2.3.2",
         "3GPP TS 23.502 Clause 4.2.2.3.3",
@@ -561,15 +381,7 @@
       "generated_citations": [
         "[TS 23.502 Clause 4.2.2.3.1, Page 44]",
         "[TS 23.502 Clause 4.2.2.3.2, Page 46]",
-        "[TS 23.502 Clause 4.2.2.3.3, Page 46-47]",
-        "[TS 23.502 Clause 4.2.2.3.3, Page 46-47]",
-        "[TS 23.502 Clause 4.2.2.3.3, Page 46-47]",
-        "[TS 23.502 Clause 4.2.2.3.3, Page 46-47]",
-        "[TS 23.502 Clause 4.2.2.3.3, Page 47]",
-        "[TS 23.502 Clause 4.2.2.3.3, Page 47]",
-        "[TS 23.502 Clause 4.2.2.3.3, Page 47]",
-        "[TS 23.502 Clause 4.2.2.3.3, Page 47]",
-        "[TS 23.502 Clause 4.2.2.3.3, Page 47]"
+        "[TS 23.502 Clause 4.2.2.3.3, Page 46-47]"
       ]
     },
     {
@@ -584,7 +396,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 6860.52,
+      "latency_ms": 23072.43,
       "retrieved_clauses": [
         "3GPP TS 23.502 Clause 4.3.2.2.1",
         "3GPP TS 23.502 Clause 4.23.5.1",
@@ -593,15 +405,8 @@
       ],
       "generated_citations": [
         "[TS 23.502 Clause 4.3.2.2.1, Page 92]",
-        "[TS 23.502 Clause 4.3.2.2.1, Page 92]",
-        "[TS 23.502 Clause 4.3.2.2.1, Page 92]",
-        "[TS 23.502 Clause 4.3.2.2.1, Page 92]",
-        "[TS 23.502 Clause 4.3.2.2.1, Page 92]",
-        "[TS 23.502 Clause 4.3.2.2.1, Page 92]",
-        "[TS 23.502 Clause 4.22.7, Page 389-390]",
-        "[TS 23.502 Clause 4.22.7, Page 389-390]",
         "[TS 23.502 Clause 4.23.5.1, Page 404-405]",
-        "[TS 23.502 Clause 4.23.5.1, Page 404-405]"
+        "[TS 23.502 Clause 4.22.7, Page 389-390]"
       ]
     },
     {
@@ -616,7 +421,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 5323.92,
+      "latency_ms": 24558.77,
       "retrieved_clauses": [
         "3GPP TS 23.502 Clause 4.9.1.2.2",
         "3GPP TS 23.502 Clause 4.23.12.8.6",
@@ -625,8 +430,7 @@
       ],
       "generated_citations": [
         "[TS 23.502 Clause 4.9.1.2.2, Page 172-173]",
-        "[TS 23.502 Clause 4.9.1.2.2, Page 172-173]",
-        "[TS 23.502 Clause 4.9.1.2.2, Page 172-173]"
+        "[TS 23.502 Clause 4.23.11.4, Page 433-434]"
       ]
     },
     {
@@ -641,7 +445,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 11777.82,
+      "latency_ms": 8403.87,
       "retrieved_clauses": [
         "3GPP TS 23.502 Clause 4.2.3.2",
         "3GPP TS 23.502 Clause 4.2.3.2",
@@ -650,18 +454,7 @@
       ],
       "generated_citations": [
         "[TS 23.502 Clause 4.2.3.2, Page 47-48]",
-        "[TS 23.502 Clause 4.2.3.2, Page 47-48]",
-        "[TS 23.502 Clause 4.2.3.3, Page 59]",
-        "[TS 23.502 Clause 4.2.3.2, Page 47-48]",
-        "[TS 23.502 Clause 4.2.3.3, Page 59]",
-        "[TS 23.502 Clause 4.2.3.3, Page 59]",
-        "[TS 23.502 Clause 4.2.3.3, Page 59]",
-        "[TS 23.502 Clause 4.2.3.2, Page 47-48]",
-        "[TS 23.502 Clause 4.2.3.2, Page 47-48]",
-        "[TS 23.502 Clause 4.2.3.2, Page 47-48]",
-        "[TS 23.502 Clause 4.2.3.2, Page 56]",
-        "[TS 23.502 Clause 4.2.3.2, Page 47-48]",
-        "[TS 23.502 Clause 4.2.3.2, Page 56]"
+        "[TS 23.502 Clause 4.2.3.3, Page 59]"
       ]
     },
     {
@@ -676,7 +469,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 14333.74,
+      "latency_ms": 24184.5,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 5.15.1",
         "3GPP TS 23.502 Clause 5.2.16.2.1",
@@ -685,10 +478,12 @@
       ],
       "generated_citations": [
         "[TS 23.501 Clause 6.2.14, Page 434]",
+        "[TS 23.501 Clause 5.15.5.2.3, Page 233]",
+        "[TS 23.501 Clause 5.15.1, Page 221]",
+        "[TS 23.501 Clause 5.15.10, Page 223]",
+        "[TS 23.501 Clause 6.2.1, Page 423-424]",
         "[TS 23.502 Clause 5.2.16.2.1, Page 560-561]",
-        "[TS 23.501 Clause 5.15.5.2.3, Page 233]",
-        "[TS 23.501 Clause 5.15.5.2.3, Page 233]",
-        "[TS 23.501 Clause 5.15.5.2.3, Page 233]"
+        "[TS 23.501 Clause 5.15.11, Page 225]"
       ]
     },
     {
@@ -699,26 +494,20 @@
       "is_abstained": false,
       "abstention_correct": true,
       "hit_rate": 1.0,
-      "reciprocal_rank": 0.3333333333333333,
+      "reciprocal_rank": 0.25,
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 13925.55,
+      "latency_ms": 7809.39,
       "retrieved_clauses": [
         "3GPP TS 23.502 Clause 4.4.1.2",
+        "3GPP TS 23.501 Clause 5.6.2",
         "3GPP TS 23.502 Clause 4.4.2.2",
-        "3GPP TS 23.501 Clause 5.8.2.11.1",
-        "3GPP TS 23.502 Clause 4.23.11.2"
+        "3GPP TS 23.501 Clause 5.8.2.11.1"
       ],
       "generated_citations": [
         "[TS 23.502 Clause 4.4.1.2, Page 153-154]",
-        "[TS 23.502 Clause 4.4.1.2, Page 153-154]",
-        "[TS 23.502 Clause 4.4.1.2, Page 153-154]",
-        "[TS 23.502 Clause 4.4.1.2, Page 153-154]",
-        "[TS 23.501 Clause 5.8.2.11.1, Page 186-187]",
-        "[TS 23.501 Clause 5.8.2.11.1, Page 186-187]",
-        "[TS 23.501 Clause 5.8.2.11.1, Page 186-187]",
-        "[TS 23.502 Clause 4.4.1.2, Page 153-154]"
+        "[TS 23.501 Clause 5.6.2, Page 124-125]"
       ]
     },
     {
@@ -728,12 +517,12 @@
       "should_abstain": false,
       "is_abstained": false,
       "abstention_correct": true,
-      "hit_rate": 0.0,
-      "reciprocal_rank": 0.0,
+      "hit_rate": 1.0,
+      "reciprocal_rank": 0.5,
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 14233.3,
+      "latency_ms": 24193.5,
       "retrieved_clauses": [
         "3GPP TS 23.501 Clause 5.33.3.3",
         "3GPP TS 23.501 Clause 5.7.2.4.1b",
@@ -743,14 +532,8 @@
       "generated_citations": [
         "[TS 23.501 Clause 5.33.3.3, Page 403-404]",
         "[TS 23.502 Clause 4.3.3.2, Page 117]",
-        "[TS 23.502 Clause 4.3.3.2, Page 117]",
-        "[TS 23.502 Clause 4.3.3.2, Page 117]",
-        "[TS 23.501 Clause 5.32.5.1, Page 383-384]",
-        "[TS 23.501 Clause 5.32.5.1, Page 383-384]",
-        "[TS 23.501 Clause 5.32.5.1, Page 383-384]",
-        "[TS 23.502 Clause 4.3.3.2, Page 117]",
         "[TS 23.501 Clause 5.7.2.4.1b, Page 161]",
-        "[TS 23.501 Clause 5.7.2.4.1b, Page 161]"
+        "[TS 23.501 Clause 5.32.5.1, Page 383-384]"
       ]
     },
     {
@@ -765,7 +548,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 1431.29,
+      "latency_ms": 1561.78,
       "retrieved_clauses": [],
       "generated_citations": []
     },
@@ -781,7 +564,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 822.39,
+      "latency_ms": 1051.87,
       "retrieved_clauses": [],
       "generated_citations": []
     },
@@ -790,14 +573,14 @@
       "question": "Explain the 6G Quantum teleportation routing algorithm defined in 3GPP TS 23.501.",
       "category": "negative_abstention",
       "should_abstain": true,
-      "is_abstained": false,
-      "abstention_correct": false,
-      "hit_rate": 0.0,
-      "reciprocal_rank": 0.0,
+      "is_abstained": true,
+      "abstention_correct": true,
+      "hit_rate": 1.0,
+      "reciprocal_rank": 1.0,
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 16177.01,
+      "latency_ms": 3766.54,
       "retrieved_clauses": [],
       "generated_citations": []
     },
@@ -813,7 +596,7 @@
       "citation_precision": 1.0,
       "faithfulness_score": 1.0,
       "answer_relevancy_score": 1.0,
-      "latency_ms": 1226.29,
+      "latency_ms": 795.44,
       "retrieved_clauses": [],
       "generated_citations": []
     }
