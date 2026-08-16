@@ -46,8 +46,9 @@ def clean_output_formatting(text: str) -> str:
             if "could not find sufficient supporting evidence" in line.lower():
                 return line.strip()
 
-    # Escape dollar signs — Streamlit renders them as LaTeX math delimiters
+    # Escape dollar signs and normalize section signs
     text = text.replace("$", "\\$")
+    text = text.replace("§", "Clause ")
 
     # Remove empty backticks or double spaces
     text = re.sub(r"\s*``\s*", " ", text)

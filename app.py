@@ -358,7 +358,7 @@ def render_response_footer(res: PipelineResponse):
     # Citations
     if res.citation_validation and res.citation_validation.valid_citations:
         tags = "".join(
-            f'<span class="ref-tag">{c.document_code} §{c.section_number}, p.{c.page_number}</span>'
+            f'<span class="ref-tag">{c.document_code} Clause {c.section_number} (p. {c.page_number})</span>'
             for c in res.citation_validation.valid_citations
         )
         st.markdown(f"""
@@ -376,7 +376,7 @@ def render_response_footer(res: PipelineResponse):
                 text_preview = chunk.text[:500] + ("..." if len(chunk.text) > 500 else "")
                 st.markdown(f"""
                 <div class="excerpt-card">
-                    <div class="excerpt-header">{chunk.document_code} — §{chunk.section_number}: {chunk.section_title}</div>
+                    <div class="excerpt-header">{chunk.document_code} — Clause {chunk.section_number}: {chunk.section_title}</div>
                     <div class="excerpt-meta">Page {chunk.page_number} · {chunk.section_hierarchy} · {score_text}</div>
                     <div class="excerpt-body">{text_preview}</div>
                 </div>
@@ -513,7 +513,7 @@ def main():
                 m = c["metadata"]
                 st.markdown(f"""
                 <div class="inspect-card">
-                    <div class="inspect-title">§{m['section_number']}: {m['section_title']}</div>
+                    <div class="inspect-title">Clause {m['section_number']}: {m['section_title']}</div>
                     <div class="inspect-meta">Page {m['page_number']} · {m['section_hierarchy']} · {len(c['text'])} chars</div>
                     <div class="inspect-text">{c['text']}</div>
                 </div>

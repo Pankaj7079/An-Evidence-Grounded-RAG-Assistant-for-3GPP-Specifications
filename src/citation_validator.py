@@ -109,11 +109,11 @@ class CitationValidator:
             else:
                 invalid_list.append(cit)
 
-        # Deduplicate citations while preserving order
+        # Deduplicate citations by (document_code, section_number) while preserving order
         seen = set()
         deduped_valid: List[Citation] = []
         for cit in valid_list:
-            key = (cit.document_code, cit.section_number, cit.page_number)
+            key = (cit.document_code.strip(), cit.section_number.strip())
             if key not in seen:
                 seen.add(key)
                 deduped_valid.append(cit)
