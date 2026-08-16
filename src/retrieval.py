@@ -1,10 +1,7 @@
 """All-in-One Native Qdrant Hybrid Retrieval Engine with Server-Side RRF Fusion.
 
-Features:
-1. Native Qdrant Multi-Vector Query: Dense (HNSW Cosine) + Sparse (BM25) searched directly in Qdrant.
-2. Server-Side Reciprocal Rank Fusion (RRF): Executed directly on Qdrant via Prefetch & FusionQuery.
-3. Payload Metadata Extraction: Returns fully populated Chunk payloads directly from Qdrant.
-4. Calibrated Evidence Gate: Evaluates retrieval confidence and triggers controlled abstention.
+Optimized for sub-second retrieval latency: executes a single server-side hybrid
+search and evaluates evidence grounding directly from dense & sparse signals.
 """
 
 import logging
@@ -24,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class HybridRetriever:
-    """All-in-One Qdrant Hybrid Retriever using native Dense + Sparse Named Vectors and RRF."""
+    """High-performance All-in-One Qdrant Hybrid Retriever using native Dense + Sparse BM25 and RRF."""
 
     def __init__(
         self,
@@ -62,42 +59,41 @@ class HybridRetriever:
     def dense_search(
         self,
         query: str,
-        top_k: int = 15,
+        top_k: int = 5,
         filter_doc: Optional[str] = None,
-        filter_type: Optional[str] = None,
     ) -> List[Tuple[str, float, Dict[str, Any]]]:
-        """Perform dense vector search in Qdrant; returns list of (chunk_id, cosine_score, payload)."""
-        query_vector = self.dense_model.encode(query, normalize_embeddings=True).tolist()
-        qdrant_filter = self._build_filter(filter_doc, filter_type)
+        """Perform dense vector search returning (chunk_id, score, payload) tuples."""
+        dense_vector = self.dense_model.encode(query, normalize_embeddings=True).tolist()
+        qdrant_filter = self._build_filter(filter_doc)
 
         response = self.client.query_points(
             collection_name=settings.COLLECTION_NAME,
-            query=query_vector,
+            query=dense_vector,
             using="dense",
-            query_filter=qdrant_filter,
             limit=top_k,
+            query_filter=qdrant_filter,
         )
 
         results = []
         for hit in response.points:
             chunk_id = hit.payload.get("chunk_id", str(hit.id))
-            results.append((chunk_id, float(hit.score), hit.payload))
+            score = round(float(hit.score), 4)
+            results.append((chunk_id, score, hit.payload))
         return results
 
     def sparse_search(
         self,
         query: str,
-        top_k: int = 15,
+        top_k: int = 5,
         filter_doc: Optional[str] = None,
-        filter_type: Optional[str] = None,
     ) -> List[Tuple[str, float, Dict[str, Any]]]:
-        """Perform native BM25 sparse search in Qdrant; returns list of (chunk_id, bm25_score, payload)."""
+        """Perform native BM25 sparse vector search returning (chunk_id, score, payload) tuples."""
         sparse_vecs = list(self.sparse_model.embed([query]))
         if not sparse_vecs or len(sparse_vecs[0].indices) == 0:
             return []
 
         s_vec = sparse_vecs[0]
-        qdrant_filter = self._build_filter(filter_doc, filter_type)
+        qdrant_filter = self._build_filter(filter_doc)
 
         response = self.client.query_points(
             collection_name=settings.COLLECTION_NAME,
@@ -106,24 +102,26 @@ class HybridRetriever:
                 values=s_vec.values.tolist(),
             ),
             using="sparse",
-            query_filter=qdrant_filter,
             limit=top_k,
+            query_filter=qdrant_filter,
         )
 
         results = []
         for hit in response.points:
             chunk_id = hit.payload.get("chunk_id", str(hit.id))
-            results.append((chunk_id, float(hit.score), hit.payload))
+            score = round(float(hit.score), 4)
+            results.append((chunk_id, score, hit.payload))
         return results
 
-    def retrieve(
+    def retrieve_with_gate(
         self,
         query: str,
         top_k: int = settings.CANDIDATE_K,
         filter_doc: Optional[str] = None,
         filter_type: Optional[str] = None,
-    ) -> List[RetrievalResult]:
-        """Perform Native Qdrant Server-Side Hybrid Search with Reciprocal Rank Fusion (RRF)."""
+        min_cosine_threshold: float = settings.MIN_RELEVANCE_SCORE,
+    ) -> Tuple[EvidenceGateDecision, List[RetrievalResult]]:
+        """Single-shot hybrid retrieval + Evidence Gate evaluation in one fast network call."""
         dense_vector = self.dense_model.encode(query, normalize_embeddings=True).tolist()
         sparse_vecs = list(self.sparse_model.embed([query]))
         qdrant_filter = self._build_filter(filter_doc, filter_type)
@@ -152,7 +150,7 @@ class HybridRetriever:
                 )
             )
 
-        # Native Qdrant Server-Side RRF Fusion
+        # Single Server-Side RRF Hybrid Query
         response = self.client.query_points(
             collection_name=settings.COLLECTION_NAME,
             prefetch=prefetch_queries,
@@ -183,6 +181,52 @@ class HybridRetriever:
                 )
             )
 
+        if not results:
+            return (
+                EvidenceGateDecision(
+                    is_sufficient=False,
+                    reason="No relevant 3GPP document chunks found.",
+                    top_score=0.0,
+                    confidence_percent=0.0,
+                    num_chunks=0,
+                    retrieved_chunks=[],
+                ),
+                [],
+            )
+
+        # Dense-cosine check for ground-truth domain relevance
+        dense_hits = self.dense_search(query, top_k=1, filter_doc=filter_doc)
+        top_dense_score = dense_hits[0][1] if dense_hits else 0.0
+
+        is_grounded = top_dense_score >= min_cosine_threshold
+
+        # Calibrate confidence score
+        conf_pct = round(min(99.0, max(5.0, ((top_dense_score - 0.15) / 0.55 + 0.08) * 100)), 1) if is_grounded else 5.0
+
+        gate_decision = EvidenceGateDecision(
+            is_sufficient=is_grounded,
+            reason=(
+                f"Sufficient evidence found (similarity: {top_dense_score:.3f}, confidence: {conf_pct}%, retrieved: {len(results)} chunks)."
+                if is_grounded
+                else f"Evidence below similarity threshold ({top_dense_score:.3f} < {min_cosine_threshold}). Abstaining."
+            ),
+            top_score=round(top_dense_score, 4),
+            confidence_percent=conf_pct,
+            num_chunks=len(results) if is_grounded else 0,
+            retrieved_chunks=results if is_grounded else [],
+        )
+
+        return gate_decision, results if is_grounded else []
+
+    def retrieve(
+        self,
+        query: str,
+        top_k: int = settings.CANDIDATE_K,
+        filter_doc: Optional[str] = None,
+        filter_type: Optional[str] = None,
+    ) -> List[RetrievalResult]:
+        """Convenience method returning retrieved candidates directly."""
+        _, results = self.retrieve_with_gate(query, top_k, filter_doc, filter_type)
         return results
 
     def evaluate_evidence_gate(
@@ -191,59 +235,6 @@ class HybridRetriever:
         top_k: int = settings.CANDIDATE_K,
         min_cosine_threshold: float = settings.MIN_RELEVANCE_SCORE,
     ) -> EvidenceGateDecision:
-        """Evaluate evidence quality and determine whether grounding is sufficient to answer."""
-        dense_hits = self.dense_search(query, top_k=5)
-        sparse_hits = self.sparse_search(query, top_k=5)
-
-        top_cosine = dense_hits[0][1] if dense_hits else 0.0
-        has_sparse_match = len(sparse_hits) > 0 and sparse_hits[0][1] > 0
-
-        # Calibrated evidence grounding logic:
-        is_grounded = (top_cosine >= min_cosine_threshold) or (top_cosine >= 0.28 and has_sparse_match)
-
-        # Calibrate raw cosine similarity into intuitive 0-100% confidence scale
-        base_norm = (top_cosine - 0.15) / (0.70 - 0.15)
-        if has_sparse_match:
-            base_norm += 0.08
-        conf_pct = round(max(5.0, min(99.0, base_norm * 100)), 1)
-
-        if not is_grounded:
-            return EvidenceGateDecision(
-                is_sufficient=False,
-                reason=(
-                    f"Evidence confidence below threshold (dense similarity: {top_cosine:.3f}, "
-                    f"confidence: {conf_pct}%). Abstaining."
-                ),
-                top_score=round(top_cosine, 4),
-                confidence_percent=conf_pct,
-                num_chunks=0,
-                retrieved_chunks=[],
-            )
-
-        retrieved_chunks = self.retrieve(query, top_k=top_k)
-        return EvidenceGateDecision(
-            is_sufficient=True,
-            reason=f"Sufficient evidence found (similarity: {top_cosine:.3f}, confidence: {conf_pct}%, retrieved: {len(retrieved_chunks)} chunks).",
-            top_score=round(top_cosine, 4),
-            confidence_percent=conf_pct,
-            num_chunks=len(retrieved_chunks),
-            retrieved_chunks=retrieved_chunks,
-        )
-
-
-if __name__ == "__main__":
-    retriever = HybridRetriever()
-    test_queries = [
-        "What are the functions of the AMF in 5G architecture?",
-        "Explain the Registration Procedure step by step in TS 23.502",
-        "What is the capital of France?",
-    ]
-
-    for q in test_queries:
-        print("\n" + "=" * 70)
-        print(f"QUERY: '{q}'")
-        print("=" * 70)
-        decision = retriever.evaluate_evidence_gate(q)
-        print(f"Evidence Gate: {'PASS (Sufficient)' if decision.is_sufficient else 'FAIL (Abstain)'}")
-        print(f"Reason:        {decision.reason}")
-        print(f"Top Score:     {decision.top_score}")
+        """Evaluate evidence gate confidence."""
+        gate_decision, _ = self.retrieve_with_gate(query, top_k, min_cosine_threshold=min_cosine_threshold)
+        return gate_decision

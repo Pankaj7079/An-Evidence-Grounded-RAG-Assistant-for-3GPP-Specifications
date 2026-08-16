@@ -65,36 +65,38 @@ class RAGPipeline:
         start_time = time.perf_counter()
         clean_question = question.strip()
 
-        # Step 1: Evidence Gate Check
-        gate_decision = self.retriever.evaluate_evidence_gate(clean_question, top_k=candidate_k)
-
-        if not gate_decision.is_sufficient:
-            latency = (time.perf_counter() - start_time) * 1000
-            logger.info(f"Evidence Gate rejected query: '{clean_question}' (Score: {gate_decision.top_score})")
-            return PipelineResponse(
-                query=clean_question,
-                answer=settings.ABSTENTION_MESSAGE,
-                is_abstained=True,
-                evidence_gate=gate_decision,
-                citation_validation=None,
-                retrieved_chunks=[],
-                candidate_count=0,
-                latency_ms=round(latency, 2),
-                llm_provider=self.llm_client.provider,
-            )
-
-        # Step 2: Stage 1 - Native Qdrant Multi-Vector Hybrid Retrieval (Dense + Sparse BM25)
-        candidates = self.retriever.retrieve(
+        # Step 1: Fast Single-Shot Hybrid Retrieval + Evidence Gate Evaluation
+        gate_decision, candidate_chunks = self.retriever.retrieve_with_gate(
             query=clean_question,
             top_k=candidate_k,
             filter_doc=filter_doc,
             filter_type=filter_type,
+            min_cosine_threshold=settings.MIN_RELEVANCE_SCORE,
         )
+
+        # Step 2: Immediate Safe Abstention if Gate Fails
+        if not gate_decision.is_sufficient or not candidate_chunks:
+            elapsed_ms = (time.perf_counter() - start_time) * 1000
+            abstain_text = (
+                "I could not find sufficient supporting evidence in the indexed 3GPP documents "
+                f"for this query."
+            )
+            return PipelineResponse(
+                query=clean_question,
+                answer=abstain_text,
+                retrieved_chunks=[],
+                candidate_count=0,
+                evidence_gate=gate_decision,
+                citation_validation=None,
+                latency_ms=round(elapsed_ms, 2),
+                llm_provider=self.llm_client.provider,
+                is_abstained=True,
+            )
 
         # Step 3: Stage 2 - Cross-Encoder Re-ranking
         top_chunks = self.reranker.rerank(
             query=clean_question,
-            candidates=candidates,
+            candidates=candidate_chunks,
             top_k=final_k,
         )
 
@@ -123,7 +125,7 @@ class RAGPipeline:
             evidence_gate=gate_decision,
             citation_validation=validation_result,
             retrieved_chunks=top_chunks,
-            candidate_count=len(candidates),
+            candidate_count=len(candidate_chunks),
             latency_ms=round(latency, 2),
             llm_provider=self.llm_client.provider,
         )
