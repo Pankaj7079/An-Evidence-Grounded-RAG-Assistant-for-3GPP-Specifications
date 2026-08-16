@@ -8,3 +8,7 @@ font = "sans serif"
 
 [server]
 headless = true
+fileWatcherType = "none"
+
+[client]
+showErrorDetails = false
