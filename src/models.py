@@ -94,5 +94,6 @@ class EvidenceGateDecision(BaseModel):
     is_sufficient: bool
     reason: str
     top_score: float
+    confidence_percent: float = Field(default=0.0, description="Calibrated grounding confidence percentage (0-100%)")
     num_chunks: int
     retrieved_chunks: List[RetrievalResult] = Field(default_factory=list)

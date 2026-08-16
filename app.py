@@ -5,6 +5,7 @@ An enterprise-grade, evidence-grounded AI assistant for 3GPP 5G Specifications
 """
 
 import json
+import re
 import time
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -70,24 +71,25 @@ st.markdown(
     .telemetry-bar {
         display: flex;
         gap: 12px;
-        margin-bottom: 16px;
+        margin-bottom: 18px;
         flex-wrap: wrap;
+        align-items: center;
     }
     .telemetry-chip {
-        background: #f1f5f9;
+        background: #f8fafc;
         color: #334155;
         padding: 6px 14px;
-        border-radius: 20px;
+        border-radius: 8px;
         font-size: 13px;
         font-weight: 500;
-        border: 1px solid #cbd5e1;
+        border: 1px solid #e2e8f0;
     }
     .telemetry-chip-green {
-        background: #ecfdf5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
         padding: 6px 14px;
-        border-radius: 20px;
+        border-radius: 8px;
         font-size: 13px;
         font-weight: 600;
     }
@@ -96,33 +98,57 @@ st.markdown(
         color: #92400e;
         border: 1px solid #fde68a;
         padding: 6px 14px;
-        border-radius: 20px;
+        border-radius: 8px;
         font-size: 13px;
         font-weight: 600;
     }
 
-    /* Citation Tags */
+    /* Inline & Card Citations */
+    .inline-citation {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+        margin: 0 2px;
+    }
     .citation-pill {
         background: #eff6ff;
         color: #1d4ed8;
         border: 1px solid #bfdbfe;
-        padding: 3px 8px;
+        padding: 4px 10px;
         border-radius: 6px;
-        font-size: 12px;
+        font-size: 12.5px;
         font-weight: 600;
-        margin: 2px 4px 2px 0;
+        margin: 3px 6px 3px 0;
         display: inline-block;
+    }
+
+    /* Grounded Answer Card */
+    .answer-container {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        line-height: 1.7;
+        font-size: 14.5px;
+        color: #1e293b;
     }
 
     /* Context Chunk Card */
     .chunk-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-left: 4px solid #3b82f6;
+        border-left: 4px solid #2563eb;
         border-radius: 8px;
         padding: 16px;
         margin-bottom: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
     .chunk-title {
         font-weight: 600;
@@ -143,7 +169,6 @@ st.markdown(
         padding: 10px 12px;
         border-radius: 6px;
         border: 1px solid #f1f5f9;
-        font-family: inherit;
     }
     </style>
     """,
@@ -172,6 +197,19 @@ def render_header():
         """,
         unsafe_allow_html=True,
     )
+
+
+def format_inline_citations(text: str) -> str:
+    """Transform markdown text so inline citations render as clean badge pills."""
+    pattern = r"\[(?:3GPP\s+)?(TS\s+23\.50[12])\s+Clause\s+([^,\]]+)(?:,\s*Page\s+([^\]]+))?\]"
+    def replace_badge(match):
+        doc = match.group(1).upper().replace("  ", " ")
+        clause = match.group(2).strip()
+        page = match.group(3).strip() if match.group(3) else ""
+        page_str = f" (p. {page})" if page else ""
+        return f'<span class="inline-citation">📄 {doc} § {clause}{page_str}</span>'
+
+    return re.sub(pattern, replace_badge, text)
 
 
 def main():
@@ -244,12 +282,13 @@ def main():
 
                 st.markdown("### 📋 Evidence-Grounded Answer")
 
-                # Telemetry Badges
-                gate_chip = (
-                    f'<span class="telemetry-chip-green">🛡️ Evidence Gate: Grounded ({response.evidence_gate.top_score:.3f})</span>'
-                    if not response.is_abstained
-                    else f'<span class="telemetry-chip-amber">⚠️ Evidence Gate: Abstained (Score: {response.evidence_gate.top_score:.3f})</span>'
-                )
+                # Telemetry Badges with Calibrated Confidence
+                conf_val = getattr(response.evidence_gate, "confidence_percent", 95.0)
+                if not response.is_abstained:
+                    gate_chip = f'<span class="telemetry-chip-green">🛡️ Evidence Gate: Grounded ({conf_val:.0f}% Confidence)</span>'
+                else:
+                    gate_chip = f'<span class="telemetry-chip-amber">⚠️ Evidence Gate: Abstained ({conf_val:.0f}% Confidence)</span>'
+
                 latency_chip = f'<span class="telemetry-chip">⚡ Latency: {response.latency_ms:.1f} ms</span>'
                 context_chip = f'<span class="telemetry-chip">📑 Context Chunks: {len(response.retrieved_chunks)} (Filtered from {response.candidate_count})</span>'
                 provider_chip = f'<span class="telemetry-chip">🤖 Model: {response.llm_provider.upper()}</span>'
@@ -259,10 +298,11 @@ def main():
                     unsafe_allow_html=True,
                 )
 
-                # Render Answer
-                st.markdown(response.answer)
+                # Render Formatted Answer with Inline Citation Badges
+                formatted_html = format_inline_citations(response.answer)
+                st.markdown(formatted_html, unsafe_allow_html=True)
 
-                # Citation Pills
+                # Citation Pills Section
                 if response.citation_validation and response.citation_validation.valid_citations:
                     st.markdown("#### 📌 Validated Specification Citations:")
                     citations_html = "".join(

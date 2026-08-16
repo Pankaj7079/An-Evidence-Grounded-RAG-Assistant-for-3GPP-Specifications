@@ -199,19 +199,23 @@ class HybridRetriever:
         has_sparse_match = len(sparse_hits) > 0 and sparse_hits[0][1] > 0
 
         # Calibrated evidence grounding logic:
-        # 1. High dense cosine (>= 0.35) -> Pass.
-        # 2. Moderate dense cosine (>= 0.28) + sparse telecom keyword match -> Pass.
-        # 3. Low confidence / Out-of-domain query -> Fail and trigger controlled abstention.
         is_grounded = (top_cosine >= min_cosine_threshold) or (top_cosine >= 0.28 and has_sparse_match)
+
+        # Calibrate raw cosine similarity into intuitive 0-100% confidence scale
+        base_norm = (top_cosine - 0.15) / (0.70 - 0.15)
+        if has_sparse_match:
+            base_norm += 0.08
+        conf_pct = round(max(5.0, min(99.0, base_norm * 100)), 1)
 
         if not is_grounded:
             return EvidenceGateDecision(
                 is_sufficient=False,
                 reason=(
                     f"Evidence confidence below threshold (dense similarity: {top_cosine:.3f}, "
-                    f"sparse keyword match: {has_sparse_match}). Abstaining."
+                    f"confidence: {conf_pct}%). Abstaining."
                 ),
                 top_score=round(top_cosine, 4),
+                confidence_percent=conf_pct,
                 num_chunks=0,
                 retrieved_chunks=[],
             )
@@ -219,8 +223,9 @@ class HybridRetriever:
         retrieved_chunks = self.retrieve(query, top_k=top_k)
         return EvidenceGateDecision(
             is_sufficient=True,
-            reason=f"Sufficient evidence found (dense similarity: {top_cosine:.3f}, retrieved: {len(retrieved_chunks)} chunks).",
+            reason=f"Sufficient evidence found (similarity: {top_cosine:.3f}, confidence: {conf_pct}%, retrieved: {len(retrieved_chunks)} chunks).",
             top_score=round(top_cosine, 4),
+            confidence_percent=conf_pct,
             num_chunks=len(retrieved_chunks),
             retrieved_chunks=retrieved_chunks,
         )
