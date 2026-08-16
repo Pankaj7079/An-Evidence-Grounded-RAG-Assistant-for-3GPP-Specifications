@@ -88,6 +88,40 @@ st.markdown("""
         padding: 6px 0 !important;
     }
 
+    /* ── Markdown inside chat messages ── */
+    [data-testid="stChatMessage"] .stMarkdown p {
+        font-size: 14px;
+        line-height: 1.65;
+        color: #e5e7eb;
+        margin-bottom: 8px;
+    }
+    [data-testid="stChatMessage"] .stMarkdown h4 {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: #93c5fd;
+        margin: 16px 0 6px 0;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #1f2937;
+        letter-spacing: 0.01em;
+    }
+    [data-testid="stChatMessage"] .stMarkdown h4:first-child {
+        margin-top: 10px;
+    }
+    [data-testid="stChatMessage"] .stMarkdown ul {
+        margin: 4px 0 10px 0;
+        padding-left: 18px;
+    }
+    [data-testid="stChatMessage"] .stMarkdown ul li {
+        font-size: 13.5px;
+        color: #d1d5db;
+        line-height: 1.65;
+        margin-bottom: 4px;
+    }
+    [data-testid="stChatMessage"] .stMarkdown strong {
+        color: #e5e7eb;
+        font-weight: 600;
+    }
+
     /* ── Response metadata ── */
     .response-footer {
         display: flex;
