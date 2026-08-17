@@ -338,9 +338,12 @@ st.markdown("""
 
 
 # ── Pipeline ─────────────────────────────────────────────────────────
-@st.cache_resource(show_spinner="Loading retrieval engine...")
+@st.cache_resource(show_spinner="Initializing 3GPP retrieval engine...")
 def get_pipeline() -> RAGPipeline:
-    return RAGPipeline()
+    # Initialize pipeline and pre-warm neural network models
+    pipeline = RAGPipeline()
+    pipeline.warmup()
+    return pipeline
 
 
 # ── Helpers ──────────────────────────────────────────────────────────
