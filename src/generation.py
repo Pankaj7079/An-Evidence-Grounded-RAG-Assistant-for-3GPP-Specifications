@@ -11,44 +11,59 @@ from src.models import RetrievalResult
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-# Adaptive system prompt — structure follows the nature of the question, not a rigid template
-SYSTEM_PROMPT = """You are a senior 3GPP systems architect with 15 years of experience. Answer questions using ONLY the provided specification excerpts.
+# Adaptive system prompt — structure adapts to the question type, enforces synthesis and anti-hallucination
+SYSTEM_PROMPT = """You are a senior 3GPP systems architect with 15 years of experience reviewing specifications daily.
+Answer questions using ONLY the provided specification excerpts. Never invent facts.
 
-CORE RULES:
-- Cite every claim inline like [TS 23.501 Clause 6.2.1, Page 423-424]. One citation per topic, not per sentence.
-- Do not use dollar signs. Do not use section signs (§).
-- Synthesize the spec text — never paste raw text verbatim.
-- No filler openers: never start with "Certainly", "Of course", "As per the spec", "It is important to note", "According to the context".
-- Every fact must trace back to the provided excerpts.
+CRITICAL ANTI-HALLUCINATION RULES:
+- ONLY state what the provided excerpts explicitly say. Do not fill gaps with general 3GPP knowledge.
+- For procedure steps: ONLY list steps that appear in the excerpts. Do not invent, paraphrase into fabricated steps, or add steps from memory.
+- If an excerpt is incomplete (e.g. only covers one phase of a procedure), say so briefly instead of inventing the missing parts.
+- Every single factual claim must map to a specific excerpt. If you cannot cite it, do not say it.
 
-STRUCTURE — adapt to the question type:
+WRITING QUALITY RULES:
+- Synthesize and explain in plain engineering English. Never paste verbatim spec sentences.
+- Vary your sentence structure naturally. Avoid mechanical repetition across paragraphs.
+- Cite once per distinct topic or paragraph: [TS 23.501 Clause 6.2.1, Page 423-424]. Not once per sentence.
+- No filler openers: never start with "Certainly", "Of course", "This is a", "The X is a critical", "It is important".
+- Do not use dollar signs or section symbols (§).
+- End cleanly. No trailing bullet lists after your final paragraph.
 
-1. CONCEPTUAL questions ("What is X?", "What does X do?"): 
-   Write 2-3 natural explanatory paragraphs. Keep it conversational but precise. Inline-cite once per paragraph.
-   Only add a short bulleted list at the end if there are genuinely 4+ distinct items worth listing.
+STRUCTURE — choose based on what kind of question this is:
 
-2. PROCEDURAL / FLOW questions ("How does X work?", "Explain the X procedure", "X flow"):
-   Brief intro paragraph (2 sentences, 1 citation), then numbered steps or a short sequenced list.
-   Group related steps — don't fragment every sentence into its own bullet.
+1. CONCEPTUAL ("What is X?", "What does Y do?"):
+   Write 2-3 prose paragraphs explaining the concept and its significance.
+   Add a bullet list ONLY if there are 5+ genuinely distinct items that are cleaner as a list.
+   Cite inline once per paragraph.
 
-3. COMPARISON / MULTI-PART questions ("Difference between X and Y", "What are the types of X?"):
-   Short intro sentence. Then use 2-3 H4 headings (####), each with 2-3 tight bullets.
-   Each H4 heading must end with its citation, e.g.: #### AMF Functions [TS 23.501 Clause 6.2.1, Page 423-424]
+2. PROCEDURAL / FLOW ("Explain the X procedure", "X flow", "How does X work?"):
+   1-sentence intro stating what the procedure does and its trigger, with one citation.
+   Then 4-6 numbered steps describing the actual message flow from the excerpts only.
+   Keep each step to one clear sentence. Group tightly related sub-actions into one step.
+   Do NOT add steps that aren't explicitly described in the excerpts.
 
-4. BROAD / OVERVIEW questions ("Tell me about 5G", "Explain the 5GS architecture"):
-   2 focused paragraphs covering the key points from the excerpts. Don't try to cover everything — pick the most important ideas and explain them clearly.
+3. COMPONENT / FUNCTION LIST ("What are the functions of X?", "What does X handle?"):
+   One clear intro paragraph (3-4 sentences) explaining the component's role in the architecture.
+   Then use 2-3 H4 headings grouping related functions. Each heading ends with its citation:
+   #### Connectivity & Session Control [TS 23.501 Clause 6.2.1, Page 423-424]
+   Under each heading, 2-4 bullets that synthesize — not copy-paste — the spec language.
+
+4. OVERVIEW / BROAD ("Tell me about 5G", "Explain 5GS", "How does 5G work?"):
+   Two focused paragraphs. First covers the architecture/components. Second covers key capabilities or design principles.
+   Be selective — pick the most interesting/important points from the excerpts. Do not try to cover everything.
+   Cite once per paragraph.
 
 NEGATIVE QUERIES:
-If the excerpts don't contain enough information to answer, respond with exactly this sentence and nothing else:
+If the excerpts don't contain sufficient information, respond with exactly this and nothing else:
 "I could not find sufficient supporting evidence in the indexed 3GPP documents (TS 23.501 & TS 23.502) for this query."
 """
 
 
 def clean_output_formatting(text: str) -> str:
-    """Clean up formatting and escape characters that break Streamlit rendering."""
+    """Clean up formatting artifacts and escape characters that break Streamlit rendering."""
     lower = text.lower().strip()
 
-    # Standardize all negative or out-of-scope detections to canonical abstention
+    # Normalize out-of-scope / negative responses to canonical abstention sentence
     negative_signals = [
         "could not find sufficient supporting evidence",
         "there is no mention",
@@ -64,14 +79,24 @@ def clean_output_formatting(text: str) -> str:
     ):
         return "I could not find sufficient supporting evidence in the indexed 3GPP documents (TS 23.501 & TS 23.502) for this query."
 
-    # Escape dollar signs and normalize section signs
+    # Escape dollar signs to prevent Streamlit LaTeX rendering
     text = text.replace("$", "\\$")
+    # Replace section signs with plain text
     text = text.replace("§", "Clause ")
 
-    # Normalize double spaces and quotation artifacts
+    # Strip trailing orphaned bullet lines (e.g. "• N4 Session Establishment • ...") after final paragraph
+    lines = text.split("\n")
+    # Remove trailing lines that are pure bullet artifacts with no cited content
+    while lines and re.match(r"^[•·▪\-\*]\s", lines[-1].strip()) and "[TS" not in lines[-1]:
+        lines.pop()
+    text = "\n".join(lines)
+
+    # Normalize excessive whitespace artifacts
     text = re.sub(r"\s*``\s*", " ", text)
     text = re.sub(r"\s*''\s*", " ", text)
     text = re.sub(r"[ \t]+", " ", text)
+    # Remove 3+ consecutive blank lines down to 2
+    text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
 
@@ -123,10 +148,11 @@ class LLMClient:
         self,
         prompt: str,
         system_instruction: str = SYSTEM_PROMPT,
-        temperature: float = 0.0,
+        temperature: float = 0.15,
         max_tokens: int = settings.MAX_OUTPUT_TOKENS,
     ) -> str:
         """Generate response with automatic retry and model fallback."""
+        # temperature=0.15 gives natural language variation while staying factually grounded
         # 1. Attempt generation using Groq models
         if self._groq_client:
             for model_name in self.groq_models:
@@ -238,27 +264,38 @@ def format_grounded_prompt(
 
     if q_type == "procedural":
         style_hint = (
-            "This is a PROCEDURAL question. Write a short intro (1-2 sentences, 1 citation), "
-            "then describe the flow using numbered steps or a tight sequenced list. "
-            "Keep total answer to 180-250 words. Group related steps — don't fragment each sentence into its own bullet."
+            "QUESTION TYPE: PROCEDURAL / FLOW.\n"
+            "Write exactly: (1) One intro sentence saying what this procedure does and what triggers it, with one inline citation. "
+            "(2) 4-6 numbered steps describing the actual message exchange from the excerpts. "
+            "CRITICAL: Only include steps that are explicitly described in the context above. "
+            "Do NOT fill gaps by guessing or adding steps from general 3GPP knowledge. "
+            "If only part of the procedure is covered, describe only that part and note it is a subset. "
+            "Keep each step to one plain sentence. Total answer: 200-280 words."
         )
     elif q_type == "comparison":
         style_hint = (
-            "This is a COMPARISON/LIST question. Write a single intro sentence, then use 2-3 H4 headings (####) "
-            "each ending with its citation e.g. #### AMF Functions [TS 23.501 Clause 6.2.1, Page 423]. "
-            "Under each heading write 2-3 tight bullet points. Total answer: 200-270 words."
+            "QUESTION TYPE: COMPONENT / FUNCTION LIST.\n"
+            "Write a clear 3-4 sentence intro paragraph explaining what this component is and its role in the 5G Core architecture. "
+            "Then use 2-3 H4 headings (####) grouping related capabilities. "
+            "Each heading ends with its citation e.g. #### NAS Termination & Registration [TS 23.501 Clause 6.2.1, Page 423]. "
+            "Under each heading: 2-3 bullets that explain the capabilities in plain language — do not copy verbatim spec text. "
+            "Total answer: 220-290 words."
         )
     elif q_type == "overview":
         style_hint = (
-            "This is a BROAD overview question. Write 2 focused explanatory paragraphs covering the most "
-            "important ideas from the excerpts. Don't try to cover everything — be selective and clear. "
-            "Inline-cite once per paragraph. Total answer: 150-230 words."
+            "QUESTION TYPE: BROAD OVERVIEW.\n"
+            "Write 2 focused prose paragraphs. First paragraph: describe the overall system components and how they connect. "
+            "Second paragraph: describe 2-3 key capabilities or design principles that make 5G distinct. "
+            "Be selective — use only the most important points from the excerpts. Cite inline once per paragraph. "
+            "Do NOT try to mention every detail. Total answer: 160-240 words."
         )
     else:  # conceptual
         style_hint = (
-            "This is a CONCEPTUAL question. Write 2-3 natural paragraphs that explain the concept clearly. "
-            "Inline-cite once per paragraph. Only add a brief bullet list if there are 4+ genuinely distinct items. "
-            "Total answer: 170-250 words."
+            "QUESTION TYPE: CONCEPTUAL.\n"
+            "Write 2-3 prose paragraphs explaining the concept, its purpose in the 5G architecture, and how it works in practice. "
+            "Keep a natural conversational tone — explain as if to a colleague who knows 5G basics but not this specific feature. "
+            "Cite inline once per paragraph. Do not paste verbatim spec sentences. "
+            "Total answer: 180-260 words."
         )
 
     user_prompt = (
