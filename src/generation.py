@@ -19,10 +19,11 @@ Answer using ONLY information that appears in those source excerpts.
 FAITHFULNESS GATE (apply before writing every sentence):
 Before including any fact, ask yourself: "Which source block [S1-S4] explicitly says this?"
 If you cannot point to a specific source block, DO NOT include that fact. Leave it out entirely.
-Do not use general 3GPP background knowledge to fill gaps. If the sources don't cover something, acknowledge it briefly.
+Do not use general 3GPP background knowledge to fill gaps.
 
-CITATION RULE:
-Inline-cite the clause and page, not the source number: [TS 23.501 Clause 6.2.1, Page 423-424].
+CITATION FORMAT (strictly follow this):
+Always cite as: [TS 23.501 Clause 6.2.1, Page 423-424]
+NEVER write [S1], [S2] etc in your final answer. Those labels are ONLY for your internal tracing.
 Cite once per topic group, not once per sentence.
 
 WRITING RULES:
@@ -40,10 +41,11 @@ STRUCTURE (choose based on the question type):
    Cite once per paragraph.
 
 2. PROCEDURAL / FLOW ("Explain the X procedure", "X flow", "How does X work?"):
-   One intro sentence — what is the purpose of this procedure and what triggers it — with citation.
-   Then numbered steps derived ONLY from the source excerpts.
-   If a source only covers part of the flow, describe that part and clearly note the sources are partial.
-   Do NOT add steps from memory or general knowledge.
+   FIRST check: do the sources contain actual numbered steps or a message exchange sequence?
+   - YES: One intro sentence with citation. Then numbered steps from the sources only. Do NOT add steps from memory.
+   - NO (sources only describe what the procedure does, its scope, or high-level phases):
+     Write 2-3 paragraphs explaining: what triggers the procedure, what it accomplishes, and what the sources say about its scope or variants.
+     Do NOT invent message steps. Cite once per paragraph.
 
 3. COMPONENT / FUNCTION LIST ("What are the functions of X?", "Core functions of X"):
    Intro paragraph (3-4 sentences): what the component is, where it sits in 5G Core, why it matters.
@@ -270,10 +272,12 @@ def format_grounded_prompt(
     if q_type == "procedural":
         style_hint = (
             "QUESTION TYPE: PROCEDURAL / FLOW.\n"
-            "Write: (1) One intro sentence on what this procedure does and what triggers it, with inline clause citation. "
-            "(2) Numbered steps — ONLY steps you can directly trace to [S1]-[S4] above. "
-            "If a source covers only part of the flow, describe that part and note the sources are partial. "
-            "Do NOT add steps from memory or general 3GPP knowledge. Total: 200-280 words."
+            "FIRST: Scan [S1]-[S4] for actual step-by-step message exchanges or numbered procedure steps.\n"
+            "IF sources contain actual steps: Write one intro sentence with citation, then numbered steps ONLY from those sources.\n"
+            "IF sources only describe what the procedure provides (scope, purpose, related clauses, not steps): "
+            "Write 2-3 paragraphs explaining what the procedure accomplishes, what triggers it, and relevant scope or variants from the sources. "
+            "Do NOT fabricate message steps (e.g. do not write 'UE sends X to Y' unless the source explicitly says so). "
+            "Cite once per paragraph. Total: 200-280 words."
         )
     elif q_type == "comparison":
         style_hint = (
@@ -300,7 +304,7 @@ def format_grounded_prompt(
         f"{context_str}\n\n"
         f"=== QUESTION ===\n{query}\n\n"
         f"{style_hint}\n"
-        f"REMINDER: Before each sentence, verify it traces to [S1], [S2], [S3], or [S4] above. "
-        f"If it doesn't, cut it."
+        f"FINAL REMINDER: (1) Do NOT write [S1] [S2] etc in your answer — use [TS 23.501 Clause X.Y, Page Z] citations only. "
+        f"(2) Every sentence must be directly traceable to [S1]-[S4]. If it isn't in the sources, leave it out."
     )
     return user_prompt
