@@ -338,12 +338,9 @@ st.markdown("""
 
 
 # ── Pipeline ─────────────────────────────────────────────────────────
-@st.cache_resource(show_spinner="Initializing 3GPP retrieval engine...")
+@st.cache_resource(show_spinner="Loading retrieval engine...")
 def get_pipeline() -> RAGPipeline:
-    # Initialize pipeline and pre-warm neural network models
-    pipeline = RAGPipeline()
-    pipeline.warmup()
-    return pipeline
+    return RAGPipeline()
 
 
 # ── Helpers ──────────────────────────────────────────────────────────
@@ -442,11 +439,17 @@ def main():
             st.markdown("---")
             st.markdown('<div class="sidebar-label">Example Queries</div>', unsafe_allow_html=True)
             examples = [
+                # Core architecture questions
                 "What are the core functions of the AMF?",
-                "Explain the Registration procedure of 5G",
+                "What is the role of the SMF in 5G Core?",
                 "UPF and SMF interaction via N4",
                 "What is IPUPS in roaming?",
                 "PDU Session Establishment flow",
+                # Human-style natural questions
+                "Why does 5G separate the control plane from the user plane?",
+                "How does a device get authenticated when connecting to 5G?",
+                # Out-of-domain — system should abstain gracefully
+                "What is quantum computing?",
             ]
             for ex in examples:
                 if st.button(ex, key=f"ex_{hash(ex)}"):
