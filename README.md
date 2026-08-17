@@ -6,11 +6,11 @@ An evidence-grounded Conversational AI Assistant for official 3GPP 5G Core Netwo
 
 ---
 
-## Key Highlights & Architectural Features
+## Key Highlights & Features
 
 1. **Strict Evidence Gating (Zero Hallucinations):**
    - Evaluates query-document relevance prior to LLM generation.
-   - Out-of-domain queries (e.g. non-telecom or unsupported features) trigger deterministic, controlled abstention without hallucinating phantom procedures.
+   - Out-of-domain queries trigger deterministic, controlled abstention without hallucinating phantom procedures.
 
 2. **Two-Stage Hybrid Retrieval & Re-ranking:**
    - **Stage 1 (Hybrid Candidate Retrieval):** Combines 384-dimensional dense semantic vectors (`all-MiniLM-L6-v2`) with native BM25 sparse vectors using Reciprocal Rank Fusion (RRF).
@@ -21,8 +21,8 @@ An evidence-grounded Conversational AI Assistant for official 3GPP 5G Core Netwo
    - Outputs include verified clause numbers (e.g., `TS 23.501 Clause 6.2.1 (p. 423-424)`).
    - Automated regex validator cross-checks every generated citation against retrieved context.
 
-4. **Multi-Model High-Throughput Inference:**
-   - Primary LLM inference powered by Groq (`llama-3.1-8b-instant` / `llama-3.3-70b-versatile`) with automatic rate-limit cooldown and Gemini fallback.
+4. **Multi-Model Inference:**
+   - Primary LLM inference powered by Groq (`llama-3.1-8b-instant` / `llama-3.3-70b-versatile`) with automatic rate-limit and Gemini fallback.
 
 ---
 
@@ -43,7 +43,7 @@ Evaluated across 25 standardized ground-truth 3GPP queries, cross-specification 
 
 ## Technology Stack
 
-| Layer | Component | Choice / Implementation | Rationale |
+| Layer | Component | Implementation | Rationale |
 | :--- | :--- | :--- | :--- |
 | **Vector Storage** | Hybrid Vector DB | `Qdrant` (Dense + Sparse Collections) | Supports native hybrid search with payload filtering and RRF |
 | **Dense Embeddings** | Sentence Transformer | `all-MiniLM-L6-v2` (384 dimensions) | Fast, lightweight semantic similarity with low latency |
@@ -58,7 +58,7 @@ Evaluated across 25 standardized ground-truth 3GPP queries, cross-specification 
 
 ---
 
-## Core Engineering Ideas & Design Decisions
+## Core Ideas & Decisions
 
 ### 1. Printed Page Number Extraction
 Standard PDF extraction yields document physical indices (e.g., page 450 of 900), which doesn't match the printed footer page numbers in 3GPP specs (offset due to cover pages and TOC). The parser specifically captures the printed footer page strings so citations always match the real physical specification pages.
@@ -124,9 +124,9 @@ flowchart TD
 
 ```
 .
-├── config.py                 # Central settings, model configs, thresholds
+├── config.py                 # settings, model configs, thresholds
 ├── app.py                    # Streamlit conversational interface
-├── main.py                   # CLI launcher entrypoint
+├── main.py                 
 ├── requirements.txt          # Python package requirements
 ├── pyproject.toml            # Project dependencies & tool configurations
 │
@@ -143,11 +143,9 @@ flowchart TD
 │   └── models.py             # Pydantic data schemas
 │
 ├── data/
-│   ├── raw/                  # Source 3GPP PDF documents (TS 23.501 & TS 23.502)
+│   ├── raw/                  # Source 3GPP PDF documents 
 │   ├── processed/            # Extracted chunks and metadata manifests
 │   └── evaluation/           # 25 benchmark queries and evaluation report
-│
-└── tests/                    # Automated pytest suite (20 unit/integration tests)
 ```
 
 ---
@@ -200,9 +198,5 @@ uv run python -m src.evaluation
 
 ---
 
-## Specifications Covered
-
-- **3GPP TS 23.501 Rel-17 (v17.4.0):** System architecture for the 5G System (5GS) — 888 indexed clauses.
-- **3GPP TS 23.502 Rel-16 (v16.9.0):** Procedures for the 5G System (5GS) — 949 indexed clauses.
 
 
