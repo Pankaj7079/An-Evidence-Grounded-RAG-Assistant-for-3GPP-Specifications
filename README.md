@@ -39,7 +39,41 @@ Evaluated across 25 standardized ground-truth 3GPP queries, cross-specification 
 
 ---
 
-## System Architecture
+## Technology Stack
+
+| Layer | Component | Choice / Implementation | Rationale |
+| :--- | :--- | :--- | :--- |
+| **Vector Storage** | Hybrid Vector DB | `Qdrant` (Dense + Sparse Collections) | Supports native hybrid search with payload filtering and RRF |
+| **Dense Embeddings** | Sentence Transformer | `all-MiniLM-L6-v2` (384 dimensions) | Fast, lightweight semantic similarity with low latency |
+| **Sparse Embeddings** | BM25 Lexical | `fastembed` (BM25 sparse vectors) | Crucial for exact matching of 3GPP acronyms & clause numbers |
+| **Re-Ranking** | Cross-Encoder | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Full cross-attention between query and chunk for high precision |
+| **Primary LLM** | Fast Cloud Inference | `Groq` (`llama-3.1-8b-instant`) | Sub-second generation latency, deterministic temperature (0.0–0.05) |
+| **Fallback LLM** | Failover Provider | `Google Gemini` (`gemini-2.0-flash` / `gemini-1.5-flash`) | Automatic failover on Groq rate limits or connection timeouts |
+| **Document Ingestion** | PDF & Metadata Parser | `PyPDF` / Custom Regex Engine | Extracts printed footer page numbers and clause headers |
+| **Frontend UI** | Web Interface | `Streamlit` | Custom-styled dark engineering console with source excerpt drawer |
+| **Environment** | Packaging & Runtime | `uv` (Astral) / Python 3.11+ | Fast, reproducible dependency resolution and execution |
+| **Testing & Benchmark**| Automated Eval | `pytest` + Custom Ground-Truth Evaluator | 25 multi-category benchmark test queries for continuous validation |
+
+---
+
+## Core Engineering Ideas & Design Decisions
+
+### 1. Printed Page Number Extraction
+Standard PDF extraction yields document physical indices (e.g., page 450 of 900), which doesn't match the printed footer page numbers in 3GPP specs (offset due to cover pages and TOC). The parser specifically captures the printed footer page strings so citations always match the real physical specification pages.
+
+### 2. Strict Evidence Gating (Cosine Relevance $\ge 0.40$)
+Before passing context to the LLM, the system calculates candidate similarity. If the top candidate relevance is below the threshold ($< 0.40$), the pipeline deterministically abstains with a standardized message. This prevents out-of-domain queries (like culinary recipes or general knowledge) from triggering hallucinations.
+
+### 3. Code-Level Step Detection (`_has_procedural_content`)
+When users ask for "procedures" or "flows", standard RAG systems often hallucinate sequential message steps if the retrieved chunk only describes high-level scope. Our pipeline inspects chunk text in code for explicit step indicators (`the UE sends`, `step 1`, `request/response`). If missing, it automatically switches output styling to high-level architectural overview rather than fabricating steps.
+
+### 4. Faithfulness Gate & Context Source Tracing
+Retrieved context chunks are isolated and tagged internally. The system prompt applies a strict verification rule requiring every technical claim to trace to an explicit source block before generation, with temperature clamped near zero.
+
+### 5. Automated Post-Generation Citation Validator
+A post-generation regex engine extracts all citations (e.g. `[TS 23.501 Clause 6.2.1, Page 423]`) and validates that the referenced clause and specification exist within the top-ranked retrieved context chunks. Any fabricated reference is flagged or filtered out.
+
+---
 
 ## Zero-to-Final System Architecture
 
