@@ -235,11 +235,37 @@ def _detect_question_type(query: str) -> str:
         return "comparison"
 
     # Broad / overview patterns
-    if any(kw in q for kw in ["tell me about", "overview", "explain 5g", "how 5g", "what is 5g", "network working", "architecture"]):
+    if any(kw in q for kw in ["tell me about", "overview", "explain 5g", "how 5g", "what is 5g", "network working", "architecture", "working way", "how 5g works"]):
         return "overview"
 
     # Default: conceptual
     return "conceptual"
+
+
+def _has_procedural_content(chunks: List[RetrievalResult]) -> bool:
+    """Check if retrieved chunks contain actual step-level message exchange content."""
+    # These patterns indicate actual procedure steps, not just scope descriptions
+    step_signals = [
+        r"^\s*\d+\.\s",                       # Numbered list items: "1. The UE sends..."
+        r"step\s+\d+",                          # "Step 1", "step 2"
+        r"the ue sends",                        # Explicit message exchange language
+        r"the amf sends",
+        r"the smf sends",
+        r"the upf sends",
+        r"the gnb sends",
+        r"sends a .{5,50} request",
+        r"responds with",
+        r"following steps",
+        r"procedure step",
+        r"upon receipt",
+        r"in response to",
+    ]
+
+    combined = " ".join(c.text.lower() for c in chunks)
+    for pattern in step_signals:
+        if re.search(pattern, combined, re.MULTILINE | re.IGNORECASE):
+            return True
+    return False
 
 
 def format_grounded_prompt(
@@ -269,15 +295,27 @@ def format_grounded_prompt(
     # Detect question type for adaptive structure guidance
     q_type = _detect_question_type(query)
 
+    # Key grounding check: if query looks procedural but retrieved chunks
+    # only contain scope/purpose descriptions (no actual message steps),
+    # downgrade to conceptual to prevent the LLM from hallucinating steps
+    if q_type == "procedural" and not _has_procedural_content(retrieved_chunks):
+        q_type = "procedural_no_steps"
+
     if q_type == "procedural":
         style_hint = (
             "QUESTION TYPE: PROCEDURAL / FLOW.\n"
-            "FIRST: Scan [S1]-[S4] for actual step-by-step message exchanges or numbered procedure steps.\n"
-            "IF sources contain actual steps: Write one intro sentence with citation, then numbered steps ONLY from those sources.\n"
-            "IF sources only describe what the procedure provides (scope, purpose, related clauses, not steps): "
-            "Write 2-3 paragraphs explaining what the procedure accomplishes, what triggers it, and relevant scope or variants from the sources. "
-            "Do NOT fabricate message steps (e.g. do not write 'UE sends X to Y' unless the source explicitly says so). "
-            "Cite once per paragraph. Total: 200-280 words."
+            "The retrieved sources contain actual step-level content. "
+            "Write one intro sentence with citation explaining what this procedure does and what triggers it. "
+            "Then numbered steps ONLY from [S1]-[S4]. Do NOT add steps from memory or general knowledge. Total: 200-280 words."
+        )
+    elif q_type == "procedural_no_steps":
+        style_hint = (
+            "QUESTION TYPE: PROCEDURE OVERVIEW (sources contain scope, not step-by-step flow).\n"
+            "The retrieved sources describe WHAT this procedure does, its scope, and related clauses — not the actual message steps. "
+            "Write 2-3 explanatory paragraphs covering: (1) what triggers or initiates this procedure, "
+            "(2) what it accomplishes for the UE and network, (3) any scope variants or related procedures the sources mention. "
+            "Do NOT write numbered message steps like 'UE sends X to Y' — the sources do not contain that level of detail. "
+            "Cite once per paragraph. Total: 200-260 words."
         )
     elif q_type == "comparison":
         style_hint = (
