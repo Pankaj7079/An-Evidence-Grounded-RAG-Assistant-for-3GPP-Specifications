@@ -1,4 +1,4 @@
-# Evidence-Grounded RAG Assistant for 3GPP Specifications
+# 3GPP Specification RAG Assistant
 
 🚀 **Live Demo:** [an-evidence-grounded-rag-assistant-for-3gpp-specificationsgit.streamlit.app](https://an-evidence-grounded-rag-assistant-for-3gpp-specificationsgit.streamlit.app/)
 
@@ -77,7 +77,7 @@ A post-generation regex engine extracts all citations (e.g. `[TS 23.501 Clause 6
 
 ---
 
-## Zero-to-Final System Architecture
+## Final System Architecture
 
 ```mermaid
 flowchart TD

@@ -396,7 +396,7 @@ def main():
     # Header
     st.markdown("""
     <div class="app-header">
-        <h2>3GPP Specification Assistant</h2>
+        <h2>3GPP Specification RAG Assistant</h2>
         <p class="subtitle">Ask technical questions about 5G Core Network architecture and procedures.
         Every answer is grounded in the official 3GPP specification text with clause-level citations.</p>
         <div class="spec-chips">
