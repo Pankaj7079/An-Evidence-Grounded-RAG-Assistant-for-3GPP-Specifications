@@ -29,9 +29,11 @@ Cite once per topic group, not once per sentence.
 WRITING RULES:
 - Plain engineering English. Synthesize and explain — never paste raw spec text verbatim.
 - No filler openers: "Certainly", "Of course", "It is important to note", "The X is a critical component".
+- No filler closing sentences in intro paragraphs like "Its capabilities are vital...", "This is important for...", "Its functionality is extensive...". Say something specific or stop.
 - Do not use dollar signs or section symbols (§).
 - End your answer cleanly. No trailing lists of terms after your final paragraph.
 - Vary sentence structure. Avoid repeating the same opening pattern across paragraphs.
+- For COMPONENT / FUNCTION LIST: Intro paragraph must be max 3 sentences. Do not pad it with generic importance statements.
 
 STRUCTURE (choose based on the question type):
 
@@ -306,7 +308,9 @@ def format_grounded_prompt(
             "QUESTION TYPE: PROCEDURAL / FLOW.\n"
             "The retrieved sources contain actual step-level content. "
             "Write one intro sentence with citation explaining what this procedure does and what triggers it. "
-            "Then numbered steps ONLY from [S1]-[S4]. Do NOT add steps from memory or general knowledge. Total: 200-280 words."
+            "Then numbered steps ONLY from [S1]-[S4], in the chronological order they would happen in the actual procedure. "
+            "If steps come from different sub-procedures or different clauses, do NOT mix them into one list — group by sub-procedure with a short label. "
+            "Do NOT add steps from memory or general knowledge. Total: 200-280 words."
         )
     elif q_type == "procedural_no_steps":
         style_hint = (

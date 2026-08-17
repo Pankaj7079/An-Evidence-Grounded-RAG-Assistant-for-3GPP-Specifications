@@ -441,13 +441,13 @@ def main():
             examples = [
                 # Core architecture questions
                 "What are the core functions of the AMF?",
-                "What is the role of the SMF in 5G Core?",
+                "What are the main functions of the SMF?",
                 "UPF and SMF interaction via N4",
                 "What is IPUPS in roaming?",
                 "PDU Session Establishment flow",
                 # Human-style natural questions
                 "Why does 5G separate the control plane from the user plane?",
-                "How does a device get authenticated when connecting to 5G?",
+                "What is the primary authentication procedure in 5G?",
                 # Out-of-domain — system should abstain gracefully
                 "What is quantum computing?",
             ]
