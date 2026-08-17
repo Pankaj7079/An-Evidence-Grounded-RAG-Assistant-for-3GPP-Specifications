@@ -45,21 +45,6 @@ class RAGPipeline:
         self.llm_client = llm_client or LLMClient()
         self.validator = CitationValidator()
 
-    def warmup(self) -> None:
-        """Pre-warm PyTorch neural models, tokenizers, and cloud connections."""
-        try:
-            # 1. Warm up dense embedding model
-            _ = self.retriever.dense_model.encode("3gpp 5g", normalize_embeddings=True)
-            # 2. Warm up sparse BM25 tokenizer
-            _ = list(self.retriever.sparse_model.embed(["3gpp 5g"]))
-            # 3. Warm up Cross-Encoder transformer
-            _ = self.reranker.model.predict([("3gpp 5g", "3gpp 5g architecture")])
-            # 4. Pre-warm Qdrant Cloud connection pool
-            _ = self.retriever.client.collection_exists(settings.COLLECTION_NAME)
-            logger.info("RAG pipeline neural models and connections pre-warmed successfully.")
-        except Exception as e:
-            logger.debug(f"Warmup notice: {e}")
-
     def query(
         self,
         question: str,

@@ -417,7 +417,7 @@ def main():
             st.session_state["messages"] = [
                 {
                     "role": "assistant",
-                    "content": "Ask me anything about 3GPP 5G Core — system architecture (TS 23.501) or procedures (TS 23.502). I'll ground every answer in the actual spec text with clause and page references.",
+                    "content": "Ask me anything about 3GPP 5G Core — system architecture (TS 23.501) or procedures (TS 23.502).",
                     "response_obj": None,
                 }
             ]

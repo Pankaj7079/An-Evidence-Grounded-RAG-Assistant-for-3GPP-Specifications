@@ -41,49 +41,45 @@ Evaluated across 25 standardized ground-truth 3GPP queries, cross-specification 
 
 ## System Architecture
 
-```
-User Query
-    │
-    ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 1. Evidence Gate (Cosine Relevance Check, Threshold = 0.40) │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-               ┌───────────────┴───────────────┐
-               ▼                               ▼
-       [Score < 0.40]                  [Score >= 0.40]
-      Instant Abstention                       │
-   ("No supporting evidence")                  ▼
-                               ┌───────────────────────────────┐
-                               │ 2. Stage 1: Hybrid Retrieval  │
-                               │  - Dense HNSW (MiniLM-L6)     │
-                               │  - Sparse BM25 (FastEmbed)    │
-                               │  - Reciprocal Rank Fusion     │
-                               └───────────────┬───────────────┘
-                                               │ (Top 15 Candidates)
-                                               ▼
-                               ┌───────────────────────────────┐
-                               │ 3. Stage 2: Cross-Encoder     │
-                               │  - ms-marco-MiniLM-L-6-v2     │
-                               │  - Cross-attention re-ranking │
-                               └───────────────┬───────────────┘
-                                               │ (Top 4 Context Chunks)
-                                               ▼
-                               ┌───────────────────────────────┐
-                               │ 4. Deterministic Generation   │
-                               │  - Strict Grounding Prompt    │
-                               │  - Groq Llama-3.1 / Gemini    │
-                               └───────────────┬───────────────┘
-                                               │
-                                               ▼
-                               ┌───────────────────────────────┐
-                               │ 5. Post-Generation Validation │
-                               │  - Regex Citation Extractor   │
-                               │  - Ground-truth clause match  │
-                               └───────────────┬───────────────┘
-                                               │
-                                               ▼
-                                   Verified Grounded Answer
+## Zero-to-Final System Architecture
+
+```mermaid
+flowchart TD
+    %% Styling
+    classDef data fill:#2d3748,stroke:#4a5568,stroke-width:2px,color:#fff
+    classDef core fill:#2b6cb0,stroke:#63b3ed,stroke-width:2px,color:#fff
+    classDef ai fill:#805ad5,stroke:#b794f4,stroke-width:2px,color:#fff
+    classDef gate fill:#c53030,stroke:#fc8181,stroke-width:2px,color:#fff
+    
+    %% Ingestion Pipeline
+    subgraph Ingestion ["1. Data Ingestion & Indexing Pipeline"]
+        A1[3GPP Raw PDFs<br>TS 23.501 & TS 23.502]:::data --> A2[PDF Parser<br>Extracts Text & Printed Pages]
+        A2 --> A3[Semantic Chunker<br>Splits by Clauses/Paragraphs]
+        A3 --> A4[Embedding Model<br>all-MiniLM-L6-v2]:::ai
+        A4 --> A5[(Qdrant Vector DB<br>Hybrid Index)]:::data
+    end
+
+    %% User Query Flow
+    User([User Query]) --> B1
+    
+    subgraph Retrieval ["2. Two-Stage Retrieval & Evidence Gating"]
+        B1[Evidence Gate<br>Cosine Similarity Check]:::gate
+        
+        B1 -- "Score < 0.40" --> B2[Instant Abstention<br>Prevent Hallucination]
+        
+        B1 -- "Score >= 0.40" --> B3[Stage 1: Hybrid Retrieval<br>Dense + Sparse BM25 + RRF]
+        B3 --> |Top 15 Chunks| B4[Stage 2: Cross-Encoder<br>ms-marco-MiniLM-L-6-v2]:::ai
+    end
+    
+    A5 -.-> B3
+    
+    subgraph Generation ["3. Grounded Generation & Validation"]
+        B4 --> |Top 4 Chunks| C1[Faithfulness Prompt<br>Zero-Shot Grounding Rules]
+        C1 --> C2[LLM Inference<br>Groq Llama-3.1 / Gemini]:::ai
+        C2 --> C3[Post-Generation<br>Citation Validator]:::gate
+        
+        C3 -- "Invalid Citations Stripped" --> Output([Verified Grounded Answer])
+    end
 ```
 
 ---
