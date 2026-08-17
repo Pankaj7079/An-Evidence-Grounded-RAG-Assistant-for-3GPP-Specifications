@@ -11,27 +11,36 @@ from src.models import RetrievalResult
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-# System instructions to enforce evidence grounding, clean structuring, and citation placement
-SYSTEM_PROMPT = """You are a senior 3GPP systems architect. Answer questions using ONLY the provided specification excerpts.
+# Adaptive system prompt — structure follows the nature of the question, not a rigid template
+SYSTEM_PROMPT = """You are a senior 3GPP systems architect with 15 years of experience. Answer questions using ONLY the provided specification excerpts.
 
-STRUCTURE:
-1. Start with a direct opening paragraph (2-3 sentences) that answers the question. End this paragraph with the primary citation in brackets, e.g. [TS 23.501 Clause 6.2.1, Page 423-424].
-2. Add 2-3 short sections using Markdown H4 headings (####). Each heading MUST end with its citation tag in brackets, e.g.:
-   #### Access and Mobility Control [TS 23.501 Clause 6.2.1, Page 423-424]
-3. Under each heading, write 2-4 concise bullet points using hyphens (-). Group related items into a single bullet. Do NOT repeat citations on individual bullets.
-4. Keep total answer to 200-300 words.
+CORE RULES:
+- Cite every claim inline like [TS 23.501 Clause 6.2.1, Page 423-424]. One citation per topic, not per sentence.
+- Do not use dollar signs. Do not use section signs (§).
+- Synthesize the spec text — never paste raw text verbatim.
+- No filler openers: never start with "Certainly", "Of course", "As per the spec", "It is important to note", "According to the context".
+- Every fact must trace back to the provided excerpts.
 
-WRITING RULES:
-- Write naturally and vary sentence structure.
-- Synthesize and explain; don't copy-paste raw spec text.
-- No filler phrases: "It is important to note", "As specified in", "According to the context".
-- Do not use dollar signs in your output.
-- Every claim must trace back to the provided excerpts.
+STRUCTURE — adapt to the question type:
+
+1. CONCEPTUAL questions ("What is X?", "What does X do?"): 
+   Write 2-3 natural explanatory paragraphs. Keep it conversational but precise. Inline-cite once per paragraph.
+   Only add a short bulleted list at the end if there are genuinely 4+ distinct items worth listing.
+
+2. PROCEDURAL / FLOW questions ("How does X work?", "Explain the X procedure", "X flow"):
+   Brief intro paragraph (2 sentences, 1 citation), then numbered steps or a short sequenced list.
+   Group related steps — don't fragment every sentence into its own bullet.
+
+3. COMPARISON / MULTI-PART questions ("Difference between X and Y", "What are the types of X?"):
+   Short intro sentence. Then use 2-3 H4 headings (####), each with 2-3 tight bullets.
+   Each H4 heading must end with its citation, e.g.: #### AMF Functions [TS 23.501 Clause 6.2.1, Page 423-424]
+
+4. BROAD / OVERVIEW questions ("Tell me about 5G", "Explain the 5GS architecture"):
+   2 focused paragraphs covering the key points from the excerpts. Don't try to cover everything — pick the most important ideas and explain them clearly.
 
 NEGATIVE QUERIES:
-If the excerpts don't cover the question, respond with exactly:
+If the excerpts don't contain enough information to answer, respond with exactly this sentence and nothing else:
 "I could not find sufficient supporting evidence in the indexed 3GPP documents (TS 23.501 & TS 23.502) for this query."
-No headers, bullets, or citations for negative responses.
 """
 
 
@@ -182,17 +191,37 @@ class LLMClient:
         return response.text.strip()
 
 
+def _detect_question_type(query: str) -> str:
+    """Classify query intent to guide answer structure."""
+    q = query.lower().strip()
+
+    # Procedural / flow patterns
+    if any(kw in q for kw in ["procedure", "flow", "how does", "how do", "explain the", "establishment", "registration", "handover", "sequence", "steps", "process"]):
+        return "procedural"
+
+    # Comparison / multi-part patterns
+    if any(kw in q for kw in ["difference", "compare", "vs", "types of", "list", "what are the", "core functions", "main functions", "key features", "roles"]):
+        return "comparison"
+
+    # Broad / overview patterns
+    if any(kw in q for kw in ["tell me about", "overview", "explain 5g", "how 5g", "what is 5g", "network working", "architecture"]):
+        return "overview"
+
+    # Default: conceptual
+    return "conceptual"
+
+
 def format_grounded_prompt(
     query: str,
     retrieved_chunks: List[RetrievalResult],
 ) -> str:
-    """Format user prompt bounded strictly by retrieved 3GPP clause context."""
+    """Format user prompt with context excerpts and adaptive structure guidance."""
     context_blocks = ["=== 3GPP SPECIFICATION CONTEXT EXCERPTS ==="]
     for idx, chunk in enumerate(retrieved_chunks, 1):
         clean_chunk_text = chunk.text.strip()
         # Keep chunk text compact to stay within token budgets
-        if len(clean_chunk_text) > 850:
-            clean_chunk_text = clean_chunk_text[:850] + "..."
+        if len(clean_chunk_text) > 900:
+            clean_chunk_text = clean_chunk_text[:900] + "..."
 
         context_blocks.append(
             f"--- Context Source [{idx}] ---\n"
@@ -203,10 +232,38 @@ def format_grounded_prompt(
         )
 
     context_str = "\n".join(context_blocks)
+
+    # Choose structure guidance based on detected question type
+    q_type = _detect_question_type(query)
+
+    if q_type == "procedural":
+        style_hint = (
+            "This is a PROCEDURAL question. Write a short intro (1-2 sentences, 1 citation), "
+            "then describe the flow using numbered steps or a tight sequenced list. "
+            "Keep total answer to 180-250 words. Group related steps — don't fragment each sentence into its own bullet."
+        )
+    elif q_type == "comparison":
+        style_hint = (
+            "This is a COMPARISON/LIST question. Write a single intro sentence, then use 2-3 H4 headings (####) "
+            "each ending with its citation e.g. #### AMF Functions [TS 23.501 Clause 6.2.1, Page 423]. "
+            "Under each heading write 2-3 tight bullet points. Total answer: 200-270 words."
+        )
+    elif q_type == "overview":
+        style_hint = (
+            "This is a BROAD overview question. Write 2 focused explanatory paragraphs covering the most "
+            "important ideas from the excerpts. Don't try to cover everything — be selective and clear. "
+            "Inline-cite once per paragraph. Total answer: 150-230 words."
+        )
+    else:  # conceptual
+        style_hint = (
+            "This is a CONCEPTUAL question. Write 2-3 natural paragraphs that explain the concept clearly. "
+            "Inline-cite once per paragraph. Only add a brief bullet list if there are 4+ genuinely distinct items. "
+            "Total answer: 170-250 words."
+        )
+
     user_prompt = (
         f"{context_str}\n\n"
         f"=== USER QUESTION ===\n{query}\n\n"
-        f"Answer concisely in 150-250 words. Synthesize — don't dump raw bullet lists. "
-        f"Cite each clause once (e.g. [TS 23.501 Clause X.Y, Page Z]) and group related points together."
+        f"{style_hint}"
     )
     return user_prompt
