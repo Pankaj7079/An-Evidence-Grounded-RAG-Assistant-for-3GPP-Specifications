@@ -30,14 +30,14 @@ An evidence-grounded Conversational AI Assistant for official 3GPP 5G Core Netwo
 
 Evaluated across 25 standardized ground-truth 3GPP queries, cross-specification procedures, and controlled negative test cases:
 
-| Evaluation Metric | Measured Value | Benchmark Target | Status |
-| :--- | :---: | :---: | :---: |
-| **Retrieval Recall@4 (Hit Rate)** | **100.0%** | $\ge 90.0\%$ | Pass |
-| **Mean Reciprocal Rank (MRR)** | **0.778** | $\ge 0.750$ | Pass |
-| **Citation Precision** | **98.8%** | $\ge 95.0\%$ | Perfect |
-| **Faithfulness / Grounding Rate** | **95.2%** | $\ge 95.0\%$ | Perfect |
-| **Controlled Abstention Accuracy** | **100.0%** | $100.0\%$ | Perfect |
-| **Answer Relevancy Score** | **100.0%** | $\ge 85.0\%$ | Exceeds |
+| Evaluation Metric | Measured Value | Benchmark Target |
+| :--- | :---: | :---: |
+| **Retrieval Recall@4 (Hit Rate)** | **100.0%** | $\ge 90.0\%$ |
+| **Mean Reciprocal Rank (MRR)** | **0.778** | $\ge 0.750$ |
+| **Citation Precision** | **98.8%** | $\ge 95.0\%$ |
+| **Faithfulness / Grounding Rate** | **95.2%** | $\ge 95.0\%$ |
+| **Controlled Abstention Accuracy** | **100.0%** | $100.0\%$ |
+| **Answer Relevancy Score** | **100.0%** | $\ge 85.0\%$ |
 
 ---
 
