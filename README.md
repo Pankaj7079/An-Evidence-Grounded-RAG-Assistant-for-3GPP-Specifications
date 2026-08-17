@@ -1,5 +1,7 @@
 # Evidence-Grounded RAG Assistant for 3GPP Specifications
 
+🚀 **Live Demo:** [an-evidence-grounded-rag-assistant-for-3gpp-specificationsgit.streamlit.app](https://an-evidence-grounded-rag-assistant-for-3gpp-specificationsgit.streamlit.app/)
+
 An evidence-grounded Conversational AI Assistant for official 3GPP 5G Core Network specifications (**TS 23.501** System Architecture & **TS 23.502** Procedures), engineered to achieve near-zero hallucinations through multi-stage retrieval, cross-encoder re-ranking, and automated citation validation.
 
 ---
@@ -28,14 +30,14 @@ An evidence-grounded Conversational AI Assistant for official 3GPP 5G Core Netwo
 
 Evaluated across 25 standardized ground-truth 3GPP queries, cross-specification procedures, and controlled negative test cases:
 
-| Evaluation Metric | Measured Value | Benchmark Target | Status |
+| Evaluation Metric | Measured Value | Benchmark Target 
 | :--- | :---: | :---: | :---: |
-| **Retrieval Recall@4 (Hit Rate)** | **100.0%** | $\ge 90.0\%$ | Pass |
-| **Mean Reciprocal Rank (MRR)** | **0.778** | $\ge 0.750$ | Pass |
-| **Citation Precision** | **98.8%** | $\ge 95.0\%$ | Perfect |
-| **Faithfulness / Grounding Rate** | **95.2%** | $\ge 95.0\%$ | Perfect |
-| **Controlled Abstention Accuracy** | **100.0%** | $100.0\%$ | Perfect |
-| **Answer Relevancy Score** | **100.0%** | $\ge 85.0\%$ | Exceeds |
+| **Retrieval Recall@4 (Hit Rate)** | **100.0%** | $\ge 90.0\%$ |
+| **Mean Reciprocal Rank (MRR)** | **0.778** | $\ge 0.750$ |
+| **Citation Precision** | **98.8%** | $\ge 95.0\%$ |
+| **Faithfulness / Grounding Rate** | **95.2%** | $\ge 95.0\%$ |
+| **Controlled Abstention Accuracy** | **100.0%** | $100.0\%$ |
+| **Answer Relevancy Score** | **100.0%** | $\ge 85.0\%$ |
 
 ---
 
